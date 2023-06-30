@@ -25,6 +25,7 @@ export default function Basic() {
           toast('My Message', {
             action: {
               label: 'Action',
+              // eslint-disable-next-line no-console
               onClick: () => console.log('Action'),
             },
           })
@@ -41,6 +42,7 @@ export default function Basic() {
               label: 'Action',
               onClick: (event) => {
                 event.preventDefault()
+                // eslint-disable-next-line no-console
                 console.log('Action')
               },
             },

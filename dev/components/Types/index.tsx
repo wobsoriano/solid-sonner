@@ -43,6 +43,7 @@ const allTypes = [
       toast.message('Event has been created', {
         action: {
           label: 'Undo',
+          // eslint-disable-next-line no-console
           onClick: () => console.log('Undo'),
         },
       }),
@@ -88,7 +89,7 @@ export function Types() {
   return (
     <div>
       <h2>Types</h2>
-      <p>You can customize the type of toast you want to render, and pass an options object as the second argument.</p>
+      <p>You can customize the type of toast you want to render, and pass an options object as the second argument.</p>
       <div class="buttons">
         <For each={allTypes}>{type => (
           <button
