@@ -4,17 +4,17 @@
   "version": "0.0.0",
   "private": false,
   "packageManager": "pnpm@7.22.0",
-  "description": "{{desc_of_lib}}",
-  "author": "{{me}}",
+  "description": "An opinionated toast component for Solid.",
+  "author": "Robert Soriano <sorianorobertc@gmail.com>",
   "license": "MIT",
   "contributors": [],
-  "homepage": "https://github.com/{{me}}/solid-sonner#readme",
+  "homepage": "https://github.com/wobsoriano/solid-sonner#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/{{me}}/solid-sonner.git"
+    "url": "git+https://github.com/wobsoriano/solid-sonner.git"
   },
   "bugs": {
-    "url": "https://github.com/{{me}}/solid-sonner/issues"
+    "url": "https://github.com/wobsoriano/solid-sonner/issues"
   },
   "keywords": [
     "solid"
@@ -63,6 +63,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config-ts": "^0.39.6",
+    "@solidjs/testing-library": "^0.8.3",
     "concurrently": "^7.6.0",
     "esbuild": "^0.17.4",
     "esbuild-plugin-solid": "^0.5.0",
