@@ -49,6 +49,7 @@
   "scripts": {
     "dev": "vite serve dev",
     "build": "tsup",
+    "dev:build": "vite build dev",
     "test": "vitest",
     "prepublishOnly": "pnpm build",
     "update-deps": "pnpm up -Li",
@@ -58,6 +59,10 @@
   },
   "peerDependencies": {
     "solid-js": "^1.6.0"
+  },
+  "dependencies": {
+    "copy-to-clipboard": "^3.3.3",
+    "highlight.js": "^11.8.0"
   },
   "devDependencies": {
     "@antfu/eslint-config-ts": "^0.39.6",

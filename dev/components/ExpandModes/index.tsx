@@ -1,5 +1,6 @@
 import { toast } from 'solid-sonner'
 import type { Setter } from 'solid-js'
+import { CodeBlock } from '../CodeBlock'
 
 export function ExpandModes(props: {
   expand: boolean
@@ -37,6 +38,7 @@ export function ExpandModes(props: {
           Default
         </button>
       </div>
+      <CodeBlock>{`<Toaster expand={${props.expand}} />`}</CodeBlock>
     </div>
   )
 }

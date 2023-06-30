@@ -1,5 +1,6 @@
 import { For, createSignal } from 'solid-js'
 import { toast } from 'solid-sonner'
+import { CodeBlock } from '../CodeBlock'
 
 // eslint-disable-next-line no-template-curly-in-string
 const promiseCode = '`${data.name} toast has been added`'
@@ -103,6 +104,7 @@ export function Types() {
           </button>
         )}</For>
       </div>
+      <CodeBlock>{`${activeType()?.snippet}`}</CodeBlock>
     </div>
   )
 }
