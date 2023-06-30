@@ -15,15 +15,32 @@ Based on the React [implementation](https://sonner.emilkowal.ski/).
 Install it:
 
 ```bash
-npm i {{name_of_lib}}
+npm i solid-sonner
 # or
-yarn add {{name_of_lib}}
+yarn add solid-sonner
 # or
-pnpm add {{name_of_lib}}
+pnpm add solid-sonner
 ```
 
-Use it:
+Add `<Toaster />` to your app, it will be the place where all your toasts will be rendered. After that you can use `toast()` from anywhere in your app.
 
 ```tsx
-import {{name_of_lib}} from '{{name_of_lib}}'
+import { Toaster, toast } from 'solid-sonner'
+
+// ...
+
+function App() {
+  return (
+    <div>
+      <Toaster />
+      <button onClick={() => toast('My first toast')}>Give me a toast</button>
+    </div>
+  )
+}
 ```
+
+Head over to solid-sonner.vercel.app for the complete docs.
+
+## License
+
+MIT
