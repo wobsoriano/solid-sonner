@@ -2,7 +2,7 @@ import './styles.css';
 import { getAsset, Loader } from './assets';
 import { HeightT, Position, ToastT, ToastToDismiss, ExternalToast, ToasterProps } from './types';
 import { ToastState, toast } from './state';
-import { Component, createComputed, createEffect, createMemo, createSignal, For, onCleanup, onMount, Setter, Show } from 'solid-js';
+import { Component, createComputed, createEffect, createMemo, createSignal, For, mergeProps, onCleanup, onMount, Setter, Show } from 'solid-js';
 
 // Visible toasts amount
 const VISIBLE_TOASTS_AMOUNT = 3;
@@ -44,25 +44,6 @@ interface ToastProps {
 }
 
 const Toast: Component<ToastProps> = (props) => {
-  const {
-    invert: ToasterInvert,
-    toast,
-    interacting,
-    setHeights,
-    visibleToasts,
-    heights,
-    index,
-    toasts,
-    expanded,
-    removeToast,
-    closeButton,
-    style,
-    className = '',
-    descriptionClassName = '',
-    duration: durationFromToaster,
-    position,
-    expandByDefault,
-  } = props;
   const [mounted, setMounted] = createSignal(false);
   const [removed, setRemoved] = createSignal(false);
   const [swiping, setSwiping] = createSignal(false);
@@ -70,22 +51,22 @@ const Toast: Component<ToastProps> = (props) => {
   const [offsetBeforeRemove, setOffsetBeforeRemove] = createSignal(0);
   const [initialHeight, setInitialHeight] = createSignal(0);
   let toastRef: HTMLLIElement
-  const isFront = index === 0;
-  const isVisible = index + 1 <= visibleToasts;
-  const toastType = toast.type;
-  const toastClassname = toast.className || '';
-  const toastDescriptionClassname = toast.descriptionClassName || '';
+  const isFront = props.index === 0;
+  const isVisible = props.index + 1 <= props.visibleToasts;
+  const toastType = props.toast.type;
+  const toastClassname = props.toast.className || '';
+  const toastDescriptionClassname = props.toast.descriptionClassName || '';
 
   // Height index is used to calculate the offset as it gets updated before the toast array, which means we can calculate the new layout faster.
-  const heightIndex = createMemo(() => heights.findIndex((height) => height.toastId === toast.id) || 0);
-  const duration = createMemo(() => toast.duration || durationFromToaster || TOAST_LIFETIME);
+  const heightIndex = createMemo(() => props.heights.findIndex((height) => height.toastId === props.toast.id) || 0);
+  const duration = createMemo(() => props.toast.duration || props.duration || TOAST_LIFETIME);
   let closeTimerStartTimeRef = 0
   let closeTimerRemainingTimeRef = duration()
   let lastCloseTimerStartTimeRef = 0
   const [pointerStartRef, setPointerStartRef] = createSignal<{ x: number; y: number } | null>(null)
-  const [y, x] = position.split('-');
+  const [y, x] = props.position.split('-');
   const toastsHeightBefore = createMemo(() => {
-    return heights.reduce((prev, curr, reducerIndex) => {
+    return props.heights.reduce((prev, curr, reducerIndex) => {
       // Calculate offset up untill current  toast
       if (reducerIndex >= heightIndex()) {
         return prev;
@@ -95,7 +76,7 @@ const Toast: Component<ToastProps> = (props) => {
     }, 0);
   });
   const offset = createMemo(() => heightIndex() * GAP + toastsHeightBefore());
-  const invert = toast.invert || ToasterInvert;
+  const invert = props.toast.invert || props.invert;
   const disabled = toastType === 'loading';
 
   onMount(() => {
@@ -108,12 +89,12 @@ const Toast: Component<ToastProps> = (props) => {
 
     setInitialHeight(newHeight);
 
-    const alreadyExists = heights.find((height) => height.toastId === toast.id);
+    const alreadyExists = props.heights.find((height) => height.toastId === props.toast.id);
 
     if (!alreadyExists) {
-      setHeights((h) => [{ toastId: toast.id, height: newHeight }, ...h]);
+      props.setHeights((h) => [{ toastId: props.toast.id, height: newHeight }, ...h]);
     } else {
-      setHeights((h) => h.map((height) => (height.toastId === toast.id ? { ...height, height: newHeight } : height)));
+      props.setHeights((h) => h.map((height) => (height.toastId === props.toast.id ? { ...height, height: newHeight } : height)));
     }
   })
 
@@ -121,15 +102,15 @@ const Toast: Component<ToastProps> = (props) => {
     // Save the offset for the exit swipe animation
     setRemoved(true);
     setOffsetBeforeRemove(offset());
-    setHeights((h) => h.filter((height) => height.toastId !== toast.id));
+    props.setHeights((h) => h.filter((height) => height.toastId !== props.toast.id));
 
     setTimeout(() => {
-      removeToast(toast);
+      props.removeToast(props.toast);
     }, TIME_BEFORE_UNMOUNT);
   };
 
   createComputed(() => {
-    if ((toast.promise && toastType === 'loading') || toast.duration === Infinity) return;
+    if ((props.toast.promise && toastType === 'loading') || props.toast.duration === Infinity) return;
     let timeoutId: ReturnType<typeof setTimeout>;
 
     // Pause the timer on each hover
@@ -148,12 +129,12 @@ const Toast: Component<ToastProps> = (props) => {
       closeTimerStartTimeRef = new Date().getTime();
       // Let the toast know it has started
       timeoutId = setTimeout(() => {
-        toast.onAutoClose?.(toast);
+        props.toast.onAutoClose?.(props.toast);
         deleteToast();
       }, closeTimerRemainingTimeRef);
     };
 
-    if (expanded || interacting) {
+    if (props.expanded || props.interacting) {
       pauseTimer();
     } else {
       startTimer();
@@ -172,52 +153,52 @@ const Toast: Component<ToastProps> = (props) => {
 
       // Add toast height tot heights array after the toast is mounted
       setInitialHeight(height);
-      setHeights((h) => [{ toastId: toast.id, height }, ...h]);
+      props.setHeights((h) => [{ toastId: props.toast.id, height }, ...h]);
 
       onCleanup(() => {
-        setHeights((h) => h.filter((height) => height.toastId !== toast.id))
+        props.setHeights((h) => h.filter((height) => height.toastId !== props.toast.id))
       })
     }
   });
 
   createComputed(() => {
-    if (toast.delete) {
+    if (props.toast.delete) {
       deleteToast();
     }
   });
 
   return (
     <li
-      aria-live={toast.important ? 'assertive' : 'polite'}
+      aria-live={props.toast.important ? 'assertive' : 'polite'}
       aria-atomic="true"
       role="status"
       tabIndex={0}
       ref={toastRef!}
-      class={className + ' ' + toastClassname}
+      class={props.className + ' ' + toastClassname}
       data-sonner-toast=""
-      data-styled={!Boolean(toast.jsx)}
+      data-styled={!Boolean(props.toast.jsx)}
       data-mounted={mounted()}
       data-promise={Boolean(toast.promise)}
       data-removed={removed}
       data-visible={isVisible}
       data-y-position={y}
       data-x-position={x}
-      data-index={index}
+      data-index={props.index}
       data-front={isFront}
       data-swiping={swiping()}
       data-type={toastType}
       data-invert={invert}
       data-swipe-out={swipeOut()}
-      data-expanded={Boolean(expanded || (expandByDefault && mounted()))}
+      data-expanded={Boolean(props.expanded || (props.expandByDefault && mounted()))}
       style={
         {
-          '--index': index,
-          '--toasts-before': index,
-          '--z-index': toasts.length - index,
+          '--index': props.index,
+          '--toasts-before': props.index,
+          '--z-index': props.toasts.length - props.index,
           '--offset': `${removed() ? offsetBeforeRemove : offset()}px`,
-          '--initial-height': expandByDefault ? 'auto' : `${initialHeight}px`,
-          ...style,
-          ...toast.style,
+          '--initial-height': props.expandByDefault ? 'auto' : `${initialHeight}px`,
+          ...props.style,
+          ...props.toast.style,
         } as Record<string, any>
       }
       onPointerDown={(event) => {
@@ -238,7 +219,7 @@ const Toast: Component<ToastProps> = (props) => {
         // Remove only if treshold is met
         if (Math.abs(swipeAmount) >= SWIPE_TRESHOLD) {
           setOffsetBeforeRemove(offset());
-          toast.onDismiss?.(toast);
+          props.toast.onDismiss?.(props.toast);
           deleteToast();
           setSwipeOut(true);
           return;
@@ -267,7 +248,7 @@ const Toast: Component<ToastProps> = (props) => {
         }
       }}
     >
-      <Show when={closeButton && !toast.jsx}>
+      <Show when={props.closeButton && !props.toast.jsx}>
         <button
             aria-label="Close toast"
             data-disabled={disabled}
@@ -277,7 +258,7 @@ const Toast: Component<ToastProps> = (props) => {
                 ? undefined
                 : () => {
                     deleteToast();
-                    toast.onDismiss?.(toast);
+                    props.toast.onDismiss?.(props.toast);
                   }
             }
           >
@@ -298,84 +279,76 @@ const Toast: Component<ToastProps> = (props) => {
           </button>
       </Show>
       <Show
-        when={toast.jsx || toast.title instanceof Element}
+        when={props.toast.jsx || props.toast.title instanceof Element}
         fallback={
           <>
-            <Show when={toastType || toast.icon || toast.promise}>
+            <Show when={toastType || props.toast.icon || toast.promise}>
               <div data-icon="">
                 <Show when={toast.promise}>
                   <Loader visible={toastType === 'loading'} />
-                  {toast.icon || getAsset(toastType!)}
+                  {props.toast.icon || getAsset(toastType!)}
                 </Show>
               </div>
             </Show>
 
             <div data-content="">
-              <div data-title="">{toast.title}</div>
-              <Show when={toast.description}>
-                <div data-description="" class={descriptionClassName + toastDescriptionClassname}>
-                  {toast.description}
+              <div data-title="">{props.toast.title}</div>
+              <Show when={props.toast.description}>
+                <div data-description="" class={props.descriptionClassName + toastDescriptionClassname}>
+                  {props.toast.description}
                 </div>
               </Show>
             </div>
-            <Show when={toast.cancel}>
+            <Show when={props.toast.cancel}>
               <button
                   data-button
                   data-cancel
                   onClick={() => {
                     deleteToast();
-                    if (toast.cancel?.onClick) {
-                      toast.cancel.onClick();
+                    if (props.toast.cancel?.onClick) {
+                      props.toast.cancel.onClick();
                     }
                   }}
                 >
-                  {toast.cancel!.label}
+                  {props.toast.cancel!.label}
                 </button>
             </Show>
-            <Show when={toast.action}>
+            <Show when={props.toast.action}>
               <button
                   data-button=""
                   onClick={(event) => {
-                    toast.action?.onClick(event);
+                    props.toast.action?.onClick(event);
                     if (event.defaultPrevented) return;
                     deleteToast();
                   }}
                 >
-                  {toast.action!.label}
+                  {props.toast.action!.label}
                 </button>
             </Show>
           </>
         }
       >
-        {toast.jsx || toast.title}
+        {props.toast.jsx || props.toast.title}
       </Show>
     </li>
   );
 };
 
 const Toaster: Component<ToasterProps> = (props) => {
-  const {
-    invert,
-    position = 'bottom-right',
-    hotkey = ['altKey', 'KeyT'],
-    expand,
-    closeButton,
-    className,
-    offset,
-    theme = 'light',
-    richColors,
-    duration,
-    style,
-    visibleToasts = VISIBLE_TOASTS_AMOUNT,
-    toastOptions,
-  } = props;
+  const propsWithDefaults = mergeProps({
+    position: 'bottom-right',
+    hotkey: ['altKey', 'KeyT'],
+    theme: 'light',
+    visibleToasts: VISIBLE_TOASTS_AMOUNT,
+  }, props) as ToasterProps & { position: Position; hotkey: string[]; visibleToasts: number }
+
   const [toasts, setToasts] = createSignal<ToastT[]>([]);
   const [heights, setHeights] = createSignal<HeightT[]>([]);
   const [expanded, setExpanded] = createSignal(false);
   const [interacting, setInteracting] = createSignal(false);
-  const [y, x] = position.split('-');
+  const [y, x] = propsWithDefaults.position.split('-');
   let listRef: HTMLOListElement
-  const hotkeyLabel = hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, '');
+  const hotkeyLabel = propsWithDefaults.hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, '');
 
   const removeToast = (toast: ToastT) => setToasts((toasts) => toasts.filter(({ id }) => id !== toast.id));
 
@@ -420,7 +393,7 @@ const Toaster: Component<ToasterProps> = (props) => {
 
   createComputed(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const isHotkeyPressed = hotkey.every((key) => (event as any)[key] || event.code === key);
+      const isHotkeyPressed = propsWithDefaults.hotkey.every((key) => (event as any)[key] || event.code === key);
 
       if (isHotkeyPressed) {
         setExpanded(true);
@@ -449,19 +422,19 @@ const Toaster: Component<ToasterProps> = (props) => {
         <ol
           tabIndex={-1}
           ref={listRef!}
-          class={className}
+          class={propsWithDefaults.className}
           data-sonner-toaster
-          data-theme={theme}
-          data-rich-colors={richColors}
+          data-theme={propsWithDefaults.theme}
+          data-rich-colors={propsWithDefaults.richColors}
           data-y-position={y}
           data-x-position={x}
           style={
             {
               '--front-toast-height': `${heights()[0]?.height}px`,
-              '--offset': typeof offset === 'number' ? `${offset}px` : offset || VIEWPORT_OFFSET,
+              '--offset': typeof propsWithDefaults.offset === 'number' ? `${propsWithDefaults.offset}px` : propsWithDefaults.offset || VIEWPORT_OFFSET,
               '--width': `${TOAST_WIDTH}px`,
               '--gap': `${GAP}px`,
-              ...style,
+              ...propsWithDefaults.style,
             } as Record<string, any>
           }
           onMouseEnter={() => setExpanded(true)}
@@ -482,20 +455,20 @@ const Toaster: Component<ToasterProps> = (props) => {
               <Toast
                 index={index()}
                 toast={toast}
-                duration={duration}
-                className={toastOptions?.className}
-                descriptionClassName={toastOptions?.descriptionClassName}
-                invert={Boolean(invert)}
-                visibleToasts={visibleToasts}
-                closeButton={Boolean(closeButton)}
+                duration={propsWithDefaults.duration}
+                className={propsWithDefaults.toastOptions?.className}
+                descriptionClassName={propsWithDefaults.toastOptions?.descriptionClassName}
+                invert={Boolean(propsWithDefaults.invert)}
+                visibleToasts={propsWithDefaults.visibleToasts}
+                closeButton={Boolean(propsWithDefaults.closeButton)}
                 interacting={interacting()}
-                position={position}
-                style={toastOptions?.style}
+                position={propsWithDefaults.position}
+                style={propsWithDefaults.toastOptions?.style}
                 removeToast={removeToast}
                 toasts={toasts()}
                 heights={heights()}
                 setHeights={setHeights}
-                expandByDefault={Boolean(expand)}
+                expandByDefault={Boolean(propsWithDefaults.expand)}
                 expanded={expanded()}
               />
             )}
