@@ -33,8 +33,8 @@ export interface ToastT {
   onAutoClose?: (toast: ToastT) => void
   promise?: PromiseT
   style?: Record<string, any>
-  className?: string
-  descriptionClassName?: string
+  class?: string
+  descriptionClass?: string
 }
 
 export type Position = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center'
@@ -44,8 +44,8 @@ export interface HeightT {
 }
 
 interface ToastOptions {
-  className?: string
-  descriptionClassName?: string
+  class?: string
+  descriptionClass?: string
   style?: Record<string, any>
 }
 
@@ -60,7 +60,7 @@ export interface ToasterProps {
   visibleToasts?: number
   closeButton?: boolean
   toastOptions?: ToastOptions
-  className?: string
+  class?: string
   style?: Record<string, any>
   offset?: string | number
 }

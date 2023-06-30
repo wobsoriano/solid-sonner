@@ -40,8 +40,8 @@ interface ToastProps {
   interacting: boolean
   style?: Record<string, any>
   duration?: number
-  className?: string
-  descriptionClassName?: string
+  class?: string
+  descriptionClass?: string
 }
 
 const Toast: Component<ToastProps> = (props) => {
@@ -55,8 +55,8 @@ const Toast: Component<ToastProps> = (props) => {
   const isFront = props.index === 0
   const isVisible = props.index + 1 <= props.visibleToasts
   const toastType = props.toast.type
-  const toastClassname = props.toast.className || ''
-  const toastDescriptionClassname = props.toast.descriptionClassName || ''
+  const toastClassname = props.toast.class || ''
+  const toastDescriptionClassname = props.toast.descriptionClass || ''
 
   // Height index is used to calculate the offset as it gets updated before the toast array, which means we can calculate the new layout faster.
   const heightIndex = createMemo(() => props.heights.findIndex(height => height.toastId === props.toast.id) || 0)
@@ -180,12 +180,12 @@ const Toast: Component<ToastProps> = (props) => {
       role="status"
       tabIndex={0}
       ref={toastRef!}
-      class={`${props.className} ${toastClassname}`}
+      class={`${props.class} ${toastClassname}`}
       data-sonner-toast=""
       data-styled={!props.toast.jsx}
       data-mounted={mounted()}
       data-promise={Boolean(toast.promise)}
-      data-removed={removed}
+      data-removed={removed()}
       data-visible={isVisible}
       data-y-position={y}
       data-x-position={x}
@@ -305,7 +305,7 @@ const Toast: Component<ToastProps> = (props) => {
             <div data-content="">
               <div data-title="">{props.toast.title}</div>
               <Show when={props.toast.description}>
-                <div data-description="" class={props.descriptionClassName + toastDescriptionClassname}>
+                <div data-description="" class={props.descriptionClass + toastDescriptionClassname}>
                   {props.toast.description}
                 </div>
               </Show>
@@ -431,7 +431,7 @@ const Toaster: Component<ToasterProps> = (props) => {
         <ol
           tabIndex={-1}
           ref={listRef!}
-          class={propsWithDefaults.className}
+          class={propsWithDefaults.class}
           data-sonner-toaster
           data-theme={propsWithDefaults.theme}
           data-rich-colors={propsWithDefaults.richColors}
@@ -450,7 +450,7 @@ const Toaster: Component<ToasterProps> = (props) => {
           onMouseMove={() => setExpanded(true)}
           onMouseLeave={() => {
             // Avoid setting expanded to false when interacting with a toast, e.g. swiping
-            if (!interacting)
+            if (!interacting())
               setExpanded(false)
           }}
           onPointerDown={() => {
@@ -464,8 +464,8 @@ const Toaster: Component<ToasterProps> = (props) => {
                 index={index()}
                 toast={toast}
                 duration={propsWithDefaults.duration}
-                class={propsWithDefaults.toastOptions?.className}
-                descriptionClassName={propsWithDefaults.toastOptions?.descriptionClassName}
+                class={propsWithDefaults.toastOptions?.class}
+                descriptionClass={propsWithDefaults.toastOptions?.descriptionClass}
                 invert={Boolean(propsWithDefaults.invert)}
                 visibleToasts={propsWithDefaults.visibleToasts}
                 closeButton={Boolean(propsWithDefaults.closeButton)}
