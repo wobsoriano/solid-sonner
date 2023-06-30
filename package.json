@@ -1,17 +1,17 @@
 {
   "version": "0.0.0",
-  "name": "{{name_of_lib}}",
+  "name": "solid-sonner",
   "description": "{{desc_of_lib}}",
   "license": "MIT",
   "author": "{{me}}",
   "contributors": [],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/{{me}}/{{name_of_lib}}.git"
+    "url": "git+https://github.com/{{me}}/solid-sonner.git"
   },
-  "homepage": "https://github.com/{{me}}/{{name_of_lib}}#readme",
+  "homepage": "https://github.com/{{me}}/solid-sonner#readme",
   "bugs": {
-    "url": "https://github.com/{{me}}/{{name_of_lib}}/issues"
+    "url": "https://github.com/{{me}}/solid-sonner/issues"
   },
   "files": [
     "dist"
@@ -62,13 +62,13 @@
     "esbuild-plugin-solid": "^0.5.0",
     "jsdom": "^21.1.0",
     "prettier": "2.8.3",
-    "solid-js": "^1.6.9",
+    "solid-js": "^1.7.7",
     "tsup": "^6.5.0",
-    "tsup-preset-solid": "^0.1.4",
+    "tsup-preset-solid": "^0.1.8",
     "typescript": "^4.9.4",
-    "vite": "^4.0.4",
-    "vite-plugin-solid": "^2.5.0",
-    "vitest": "^0.28.2"
+    "vite": "^4.3.9",
+    "vite-plugin-solid": "^2.7.0",
+    "vitest": "^0.32.2"
   },
   "keywords": [
     "solid"
