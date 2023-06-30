@@ -75,8 +75,8 @@ code {
   font-size: 13px;
   line-height: 28px;
   padding: 2px 3.6px;
-  border: 1px solid var(--gray3);
-  background: var(--gray4);
+  /* border: 1px solid var(--gray3);
+  background: var(--gray4); */
   font-family: var(--font-mono);
   border-radius: 6px;
 }
