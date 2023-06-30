@@ -32,7 +32,7 @@ export interface ToastT {
   onDismiss?: (toast: ToastT) => void
   onAutoClose?: (toast: ToastT) => void
   promise?: PromiseT
-  style?: Record<string, any>
+  style?: JSX.CSSProperties
   class?: string
   descriptionClass?: string
 }
@@ -46,7 +46,7 @@ export interface HeightT {
 interface ToastOptions {
   class?: string
   descriptionClass?: string
-  style?: Record<string, any>
+  style?: JSX.CSSProperties
 }
 
 export interface ToasterProps {
@@ -61,7 +61,7 @@ export interface ToasterProps {
   closeButton?: boolean
   toastOptions?: ToastOptions
   class?: string
-  style?: Record<string, any>
+  style?: JSX.CSSProperties
   offset?: string | number
 }
 

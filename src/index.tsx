@@ -1,5 +1,5 @@
 import './styles.css'
-import type { Component, Setter } from 'solid-js'
+import type { Component, JSX, Setter } from 'solid-js'
 import { For, Show, createComputed, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
 import { Loader, getAsset } from './assets'
 import type { ExternalToast, HeightT, Position, ToastT, ToastToDismiss, ToasterProps } from './types'
@@ -38,7 +38,7 @@ interface ToastProps {
   expandByDefault: boolean
   closeButton: boolean
   interacting: boolean
-  style?: Record<string, any>
+  style?: JSX.CSSProperties
   duration?: number
   class?: string
   descriptionClass?: string
@@ -183,7 +183,7 @@ const Toast: Component<ToastProps> = (props) => {
           '--initial-height': props.expandByDefault ? 'auto' : `${initialHeight()}px`,
           ...props.style,
           ...props.toast.style,
-        } as Record<string, any>
+        }
       }
       onPointerDown={(event) => {
         if (disabled())
@@ -418,7 +418,7 @@ const Toaster: Component<ToasterProps> = (props) => {
               '--width': `${TOAST_WIDTH}px`,
               '--gap': `${GAP}px`,
               ...propsWithDefaults.style,
-            } as Record<string, any>
+            }
           }
           onMouseEnter={() => setExpanded(true)}
           onMouseMove={() => setExpanded(true)}

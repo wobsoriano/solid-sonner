@@ -3,7 +3,7 @@ import { Toaster, toast } from '../src'
 
 const promise = () => new Promise(resolve => setTimeout(resolve, 2000))
 
-export default function Home() {
+export default function Basic() {
   const [showAutoClose, setShowAutoClose] = createSignal(false)
   const [showDismiss, setShowDismiss] = createSignal(false)
 

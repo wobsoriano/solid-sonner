@@ -15,7 +15,7 @@
     "noUncheckedIndexedAccess": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "types": [],
+    "types": ["@testing-library/jest-dom"],
     "baseUrl": "."
   },
   "exclude": ["node_modules", "dist", "./dev"]
