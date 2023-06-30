@@ -12,14 +12,14 @@ describe('environment', () => {
 
 describe('createHello', () => {
   it('Returns a Hello World signal', () =>
-    createRoot(dispose => {
+    createRoot((dispose) => {
       const [hello] = createHello()
       expect(hello()).toBe('Hello World!')
       dispose()
     }))
 
   it('Changes the hello target', () =>
-    createRoot(dispose => {
+    createRoot((dispose) => {
       const [hello, setHello] = createHello()
       setHello('Solid')
       expect(hello()).toBe('Hello Solid!')
@@ -36,7 +36,7 @@ describe('Hello', () => {
   })
 
   it('changes the hello target', () =>
-    createRoot(dispose => {
+    createRoot((dispose) => {
       const [to, setTo] = createSignal('Solid')
       const container = (<Hello to={to()} />) as HTMLDivElement
       expect(container.outerHTML).toBe('<div>Hello Solid!</div>')

@@ -1,47 +1,51 @@
 {
-  "version": "0.0.0",
   "name": "solid-sonner",
+  "type": "module",
+  "version": "0.0.0",
+  "private": false,
+  "packageManager": "pnpm@7.22.0",
   "description": "{{desc_of_lib}}",
-  "license": "MIT",
   "author": "{{me}}",
+  "license": "MIT",
   "contributors": [],
+  "homepage": "https://github.com/{{me}}/solid-sonner#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/{{me}}/solid-sonner.git"
   },
-  "homepage": "https://github.com/{{me}}/solid-sonner#readme",
   "bugs": {
     "url": "https://github.com/{{me}}/solid-sonner/issues"
   },
-  "files": [
-    "dist"
+  "keywords": [
+    "solid"
   ],
-  "private": false,
   "sideEffects": false,
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "browser": {},
   "exports": {
     "solid": {
       "development": "./dist/dev.jsx",
       "import": "./dist/index.jsx"
     },
     "development": {
+      "require": "./dist/dev.cjs",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/dev.js"
-      },
-      "require": "./dist/dev.cjs"
+      }
     },
+    "require": "./dist/index.cjs",
     "import": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "require": "./dist/index.cjs"
+    }
   },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "typesVersions": {},
+  "files": [
+    "dist"
+  ],
+  "browser": {},
   "scripts": {
     "dev": "vite serve dev",
     "build": "tsup",
@@ -49,19 +53,22 @@
     "test:client": "vitest",
     "test:ssr": "pnpm run test:client --mode ssr",
     "prepublishOnly": "pnpm build",
-    "format": "prettier --ignore-path .gitignore -w \"src/**/*.{js,ts,json,css,tsx,jsx}\" \"dev/**/*.{js,ts,json,css,tsx,jsx}\"",
     "update-deps": "pnpm up -Li",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "peerDependencies": {
     "solid-js": "^1.6.0"
   },
   "devDependencies": {
+    "@antfu/eslint-config-ts": "^0.39.6",
     "concurrently": "^7.6.0",
     "esbuild": "^0.17.4",
     "esbuild-plugin-solid": "^0.5.0",
+    "eslint": "^8.43.0",
+    "eslint-plugin-solid": "^0.12.1",
     "jsdom": "^21.1.0",
-    "prettier": "2.8.3",
     "solid-js": "^1.7.7",
     "tsup": "^6.5.0",
     "tsup-preset-solid": "^0.1.8",
@@ -70,8 +77,13 @@
     "vite-plugin-solid": "^2.7.0",
     "vitest": "^0.32.2"
   },
-  "keywords": [
-    "solid"
-  ],
-  "packageManager": "pnpm@7.22.0"
+  "eslintConfig": {
+    "plugins": [
+      "solid"
+    ],
+    "extends": [
+      "@antfu/eslint-config-ts",
+      "plugin:solid/typescript"
+    ]
+  }
 }

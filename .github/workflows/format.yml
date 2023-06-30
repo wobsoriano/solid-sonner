@@ -26,4 +26,4 @@ jobs:
       - name: Add, Commit and Push
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'Format'
+          commit_message: Format

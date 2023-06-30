@@ -1,32 +1,33 @@
-import { ToastTypes } from './types';
-import { For, JSX } from 'solid-js';
+import type { JSX } from 'solid-js'
+import { For } from 'solid-js'
+import type { ToastTypes } from './types'
 
-export const getAsset = (type: ToastTypes): JSX.Element | null => {
+export function getAsset(type: ToastTypes): JSX.Element | null {
   switch (type) {
     case 'success':
-      return SuccessIcon;
+      return SuccessIcon
 
     case 'error':
-      return ErrorIcon;
+      return ErrorIcon
 
     default:
-      null;
+      null
   }
-};
+}
 
-const bars = Array(12).fill(0);
+const bars = Array(12).fill(0)
 
-export const Loader = ({ visible }: { visible: boolean }) => {
+export function Loader(props: { visible: boolean }) {
   return (
-    <div class="sonner-loading-wrapper" data-visible={visible}>
+    <div class="sonner-loading-wrapper" data-visible={props.visible}>
       <div class="sonner-spinner">
         <For each={bars}>
           {() => <div class="sonner-loading-bar" />}
         </For>
       </div>
     </div>
-  );
-};
+  )
+}
 
 const SuccessIcon = (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" height="20" width="20">
@@ -36,7 +37,7 @@ const SuccessIcon = (
       clip-rule="evenodd"
     />
   </svg>
-);
+)
 
 const InfoIcon = (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" height="20" width="20">
@@ -46,7 +47,7 @@ const InfoIcon = (
       clip-rule="evenodd"
     />
   </svg>
-);
+)
 
 const ErrorIcon = (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" height="20" width="20">
@@ -56,4 +57,4 @@ const ErrorIcon = (
       clip-rule="evenodd"
     />
   </svg>
-);
+)

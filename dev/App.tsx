@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js'
-import { Toaster, toast } from '../src';
+import { Toaster, toast } from '../src'
 
 const App: Component = () => {
   return (

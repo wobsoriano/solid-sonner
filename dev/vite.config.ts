@@ -7,9 +7,9 @@ export default defineConfig({
     {
       name: 'Reaplace env variables',
       transform(code, id) {
-        if (id.includes('node_modules')) {
+        if (id.includes('node_modules'))
           return code
-        }
+
         return code
           .replace(/process\.env\.SSR/g, 'false')
           .replace(/process\.env\.DEV/g, 'true')
