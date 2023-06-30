@@ -1,113 +1,30 @@
-import { Show, createSignal } from 'solid-js'
-import { Toaster, toast } from '../src'
+import { Toaster } from 'solid-sonner'
 
-const promise = () => new Promise(resolve => setTimeout(resolve, 2000))
+import { createSignal } from 'solid-js'
+import { Hero } from './components/Hero'
+import { Types } from './components/Types'
+import { ExpandModes } from './components/ExpandModes'
+import { Footer } from './components/Footer'
+import { Position } from './components/Position'
 
 export default function Home() {
-  const [showAutoClose, setShowAutoClose] = createSignal(false)
-  const [showDismiss, setShowDismiss] = createSignal(false)
+  const [expand, setExpand] = createSignal(false)
+  const [position, setPosition] = createSignal<any>('bottom-right')
+  const [richColors, setRichColors] = createSignal(false)
+  const [closeButton, setCloseButton] = createSignal(false)
 
   return (
     <>
-      <button data-testid="default-button" class="button" onClick={() => toast('My Toast')}>
-        Render Toast
-      </button>
-      <button data-testid="success" class="button" onClick={() => toast.success('My Success Toast')}>
-        Render Success Toast
-      </button>
-      <button data-testid="error" class="button" onClick={() => toast.error('My Error Toast')}>
-        Render Error Toast
-      </button>
-      <button
-        data-testid="action"
-        class="button"
-        onClick={() =>
-          toast('My Message', {
-            action: {
-              label: 'Action',
-              onClick: () => console.log('Action'),
-            },
-          })
-        }
-      >
-        Render Action Toast
-      </button>
-      <button
-        data-testid="action-prevent"
-        class="button"
-        onClick={() =>
-          toast('My Message', {
-            action: {
-              label: 'Action',
-              onClick: (event) => {
-                event.preventDefault()
-                console.log('Action')
-              },
-            },
-          })
-        }
-      >
-        Render Action Toast
-      </button>
-      <button
-        data-testid="promise"
-        class="button"
-        onClick={() =>
-          toast.promise(promise, {
-            loading: 'Loading...',
-            success: 'Loaded',
-            error: 'Error',
-          })
-        }
-      >
-        Render Promise Toast
-      </button>
-      <button
-        data-testid="custom"
-        class="button"
-        onClick={() =>
-          toast.custom(t => (
-            <div>
-              <h1>jsx</h1>
-              <button onClick={() => toast.dismiss(t)}>Dismiss</button>
-            </div>
-          ))
-        }
-      >
-        Render Custom Toast
-      </button>
-      <button data-testid="infinity-toast" class="button" onClick={() => toast('My Toast', { duration: Number.POSITIVE_INFINITY })}>
-        Render Infinity Toast
-      </button>
-      <button
-        data-testid="auto-close-toast-callback"
-        class="button"
-        onClick={() =>
-          toast('My Toast', {
-            onAutoClose: () => setShowAutoClose(true),
-          })
-        }
-      >
-        Render Toast With onAutoClose callback
-      </button>
-      <button
-        data-testid="dismiss-toast-callback"
-        class="button"
-        onClick={() =>
-          toast('My Toast', {
-            onDismiss: () => setShowDismiss(true),
-          })
-        }
-      >
-        Render Toast With onAutoClose callback
-      </button>
-      <Show when={showAutoClose()}>
-        <div data-testid="auto-close-el" />
-      </Show>
-      <Show when={showDismiss()}>
-        <div data-testid="dismiss-el" />
-      </Show>
-      <Toaster richColors />
+      <Toaster richColors={richColors()} closeButton={closeButton()} expand={expand()} position={position()} />
+      <main class="container">
+        <Hero />
+        <div class="content">
+          <Types />
+          <Position position={position()} setPosition={setPosition} />
+          <ExpandModes expand={expand()} setExpand={setExpand} />
+        </div>
+      </main>
+      <Footer />
     </>
   )
 }

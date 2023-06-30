@@ -16,7 +16,10 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "types": ["@testing-library/jest-dom"],
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "solid-sonner": ["./src"]
+    }
   },
   "exclude": ["node_modules", "dist", "./dev"]
 }
