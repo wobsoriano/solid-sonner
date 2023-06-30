@@ -33,7 +33,8 @@ class Observer {
 
   create = (data: ExternalToast & { message?: string | JSX.Element; type?: ToastTypes }) => {
     const { message, ...rest } = data
-    const id = typeof data?.id === 'number' || data.id?.length! > 0 ? data.id : toastsCounter++
+    const id = typeof data?.id === 'number' || (data.id && data.id?.length > 0) ? data.id : toastsCounter++
+
     const alreadyExists = this.toasts.find((toast) => {
       return toast.id === id
     })

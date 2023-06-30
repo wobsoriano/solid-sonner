@@ -4,9 +4,9 @@ import { Toaster, toast } from '../src'
 const App: Component = () => {
   return (
     <div>
-      <Toaster />
-      <button onClick={() => toast('My first toast')}>Give me a toast</button>
-      <button onClick={() => toast.success('Give me a toast again please')}>Give me a toast again please</button>
+      <Toaster richColors />
+      <button onClick={() => toast.error('An error message')}>Show error</button>
+      <button onClick={() => toast.success('A success message')}>Show success</button>
     </div>
   )
 }

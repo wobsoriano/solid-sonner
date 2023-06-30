@@ -2,19 +2,6 @@ import type { JSX } from 'solid-js'
 import { For } from 'solid-js'
 import type { ToastTypes } from './types'
 
-export function getAsset(type: ToastTypes): JSX.Element | null {
-  switch (type) {
-    case 'success':
-      return SuccessIcon
-
-    case 'error':
-      return ErrorIcon
-
-    default:
-      null
-  }
-}
-
 const bars = Array(12).fill(0)
 
 export function Loader(props: { visible: boolean }) {
@@ -58,3 +45,16 @@ const ErrorIcon = (
     />
   </svg>
 )
+
+export function getAsset(type: ToastTypes): JSX.Element | null {
+  switch (type) {
+    case 'success':
+      return SuccessIcon
+
+    case 'error':
+      return ErrorIcon
+
+    default:
+      return null
+  }
+}

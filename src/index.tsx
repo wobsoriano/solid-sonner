@@ -1,6 +1,6 @@
 import './styles.css'
 import type { Component, Setter } from 'solid-js'
-import { For, Show, createComputed, createEffect, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
+import { For, Show, createComputed, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
 import { Loader, getAsset } from './assets'
 import type { ExternalToast, HeightT, Position, ToastT, ToastToDismiss, ToasterProps } from './types'
 import { ToastState, toast } from './state'
@@ -52,11 +52,11 @@ const Toast: Component<ToastProps> = (props) => {
   const [offsetBeforeRemove, setOffsetBeforeRemove] = createSignal(0)
   const [initialHeight, setInitialHeight] = createSignal(0)
   let toastRef: HTMLLIElement
-  const isFront = props.index === 0
-  const isVisible = props.index + 1 <= props.visibleToasts
-  const toastType = props.toast.type
-  const toastClassname = props.toast.class || ''
-  const toastDescriptionClassname = props.toast.descriptionClass || ''
+  const isFront = createMemo(() => props.index === 0)
+  const isVisible = createMemo(() => props.index + 1 <= props.visibleToasts)
+  const toastType = createMemo(() => props.toast.type)
+  const toastClassname = createMemo(() => props.toast.class || '')
+  const toastDescriptionClassname = createMemo(() => props.toast.descriptionClass || '')
 
   // Height index is used to calculate the offset as it gets updated before the toast array, which means we can calculate the new layout faster.
   const heightIndex = createMemo(() => props.heights.findIndex(height => height.toastId === props.toast.id) || 0)
@@ -66,7 +66,7 @@ const Toast: Component<ToastProps> = (props) => {
   const [closeTimerRemainingTimeRef, setCloseTimerRemainingTimeRef] = createSignal(duration())
   const [lastCloseTimerStartTimeRef, setLastCloseTimerStartTimeRef] = createSignal(0)
   const [pointerStartRef, setPointerStartRef] = createSignal<{ x: number; y: number } | null>(null)
-  const [y, x] = props.position.split('-')
+  const coords = createMemo(() => props.position.split('-'))
   const toastsHeightBefore = createMemo(() => {
     return props.heights.reduce((prev, curr, reducerIndex) => {
       // Calculate offset up untill current  toast
@@ -76,8 +76,8 @@ const Toast: Component<ToastProps> = (props) => {
       return prev + curr.height
     }, 0)
   })
-  const invert = props.toast.invert || props.invert
-  const disabled = toastType === 'loading'
+  const invert = createMemo(() => props.toast.invert || props.invert)
+  const disabled = createMemo(() => toastType() === 'loading')
 
   createComputed(() => {
     setOffset(heightIndex() * GAP + toastsHeightBefore())
@@ -85,27 +85,6 @@ const Toast: Component<ToastProps> = (props) => {
 
   onMount(() => {
     setMounted(true)
-  })
-
-  onMount(() => {
-    // if (!mounted()) {
-    //   return
-    // }
-
-    // const originalHeight = toastRef.style.height;
-    // toastRef.style.height = 'auto';
-    // const newHeight = toastRef.getBoundingClientRect().height;
-    // toastRef.style.height = originalHeight;
-
-    // setInitialHeight(newHeight);
-
-    // const alreadyExists = props.heights.find((height) => height.toastId === props.toast.id);
-
-    // if (!alreadyExists) {
-    //   props.setHeights((h) => [{ toastId: props.toast.id, height: newHeight }, ...h]);
-    // } else {
-    //   props.setHeights((h) => h.map((height) => (height.toastId === props.toast.id ? { ...height, height: newHeight } : height)));
-    // }
   })
 
   const deleteToast = () => {
@@ -120,7 +99,7 @@ const Toast: Component<ToastProps> = (props) => {
   }
 
   createComputed(() => {
-    if ((props.toast.promise && toastType === 'loading') || props.toast.duration === Number.POSITIVE_INFINITY)
+    if ((props.toast.promise && toastType() === 'loading') || props.toast.duration === Number.POSITIVE_INFINITY)
       return
     let timeoutId: ReturnType<typeof setTimeout>
 
@@ -147,7 +126,6 @@ const Toast: Component<ToastProps> = (props) => {
 
     if (props.expanded || props.interacting)
       pauseTimer()
-
     else
       startTimer()
 
@@ -180,20 +158,20 @@ const Toast: Component<ToastProps> = (props) => {
       role="status"
       tabIndex={0}
       ref={toastRef!}
-      class={`${props.class} ${toastClassname}`}
+      class={`${props.class} ${toastClassname()}`}
       data-sonner-toast=""
       data-styled={!props.toast.jsx}
       data-mounted={mounted()}
       data-promise={Boolean(toast.promise)}
       data-removed={removed()}
-      data-visible={isVisible}
-      data-y-position={y}
-      data-x-position={x}
+      data-visible={isVisible()}
+      data-y-position={coords()[0]}
+      data-x-position={coords()[1]}
       data-index={props.index}
-      data-front={isFront}
+      data-front={isFront()}
       data-swiping={swiping()}
-      data-type={toastType}
-      data-invert={invert}
+      data-type={toastType()}
+      data-invert={invert()}
       data-swipe-out={swipeOut()}
       data-expanded={Boolean(props.expanded || (props.expandByDefault && mounted()))}
       style={
@@ -208,7 +186,7 @@ const Toast: Component<ToastProps> = (props) => {
         } as Record<string, any>
       }
       onPointerDown={(event) => {
-        if (disabled)
+        if (disabled())
           return
         setOffsetBeforeRemove(offset());
         // Ensure we maintain correct pointer capture even when going outside of the toast (e.g. when swiping)
@@ -244,7 +222,7 @@ const Toast: Component<ToastProps> = (props) => {
         const yPosition = event.clientY - pointerStartRef()!.y
         const xPosition = event.clientX - pointerStartRef()!.x
 
-        const clamp = y === 'top' ? Math.min : Math.max
+        const clamp = coords()[0] === 'top' ? Math.min : Math.max
         const clampedY = clamp(0, yPosition)
         const swipeStartThreshold = event.pointerType === 'touch' ? 10 : 2
         const isAllowedToSwipe = clampedY > swipeStartThreshold
@@ -262,10 +240,10 @@ const Toast: Component<ToastProps> = (props) => {
       <Show when={props.closeButton && !props.toast.jsx}>
         <button
             aria-label="Close toast"
-            data-disabled={disabled}
+            data-disabled={disabled()}
             data-close-button
             onClick={
-              disabled
+              disabled()
                 ? undefined
                 : () => {
                     deleteToast()
@@ -296,8 +274,8 @@ const Toast: Component<ToastProps> = (props) => {
             <Show when={toastType || props.toast.icon || toast.promise}>
               <div data-icon="">
                 <Show when={toast.promise}>
-                  <Loader visible={toastType === 'loading'} />
-                  {props.toast.icon || getAsset(toastType!)}
+                  <Loader visible={toastType() === 'loading'} />
+                  {props.toast.icon || getAsset(toastType()!)}
                 </Show>
               </div>
             </Show>
@@ -305,7 +283,7 @@ const Toast: Component<ToastProps> = (props) => {
             <div data-content="">
               <div data-title="">{props.toast.title}</div>
               <Show when={props.toast.description}>
-                <div data-description="" class={props.descriptionClass + toastDescriptionClassname}>
+                <div data-description="" class={props.descriptionClass + toastDescriptionClassname()}>
                   {props.toast.description}
                 </div>
               </Show>
@@ -357,9 +335,9 @@ const Toaster: Component<ToasterProps> = (props) => {
   const [heights, setHeights] = createSignal<HeightT[]>([])
   const [expanded, setExpanded] = createSignal(false)
   const [interacting, setInteracting] = createSignal(false)
-  const [y, x] = propsWithDefaults.position.split('-')
+  const coords = createMemo(() => propsWithDefaults.position.split('-'))
   let listRef: HTMLOListElement
-  const hotkeyLabel = propsWithDefaults.hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, '')
+  const hotkeyLabel = createMemo(() => propsWithDefaults.hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, ''))
 
   const removeToast = (toast: ToastT) => setToasts(toasts => toasts.filter(({ id }) => id !== toast.id))
 
@@ -389,10 +367,6 @@ const Toaster: Component<ToasterProps> = (props) => {
     onCleanup(() => {
       unsub()
     })
-  })
-
-  createEffect(() => {
-    console.log(heights())
   })
 
   createComputed(() => {
@@ -427,7 +401,7 @@ const Toaster: Component<ToasterProps> = (props) => {
   return (
     <Show when={toasts().length > 0}>
       {/* Remove item from normal navigation flow, only available via hotkey */}
-      <section aria-label={`Notifications ${hotkeyLabel}`} tabIndex={-1}>
+      <section aria-label={`Notifications ${hotkeyLabel()}`} tabIndex={-1}>
         <ol
           tabIndex={-1}
           ref={listRef!}
@@ -435,8 +409,8 @@ const Toaster: Component<ToasterProps> = (props) => {
           data-sonner-toaster
           data-theme={propsWithDefaults.theme}
           data-rich-colors={propsWithDefaults.richColors}
-          data-y-position={y}
-          data-x-position={x}
+          data-y-position={coords()[0]}
+          data-x-position={coords()[1]}
           style={
             {
               '--front-toast-height': `${heights()[0]?.height}px`,
