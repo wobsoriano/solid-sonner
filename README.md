@@ -39,7 +39,7 @@ function App() {
 }
 ```
 
-Head over to solid-sonner.vercel.app for the complete docs.
+Head over to [solid-sonner.vercel.app](https://solid-sonner.vercel.app) for the complete docs.
 
 ## License
 
