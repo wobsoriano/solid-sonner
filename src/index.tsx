@@ -375,7 +375,7 @@ const Toaster: Component<ToasterProps> = (props) => {
       setExpanded(false)
   })
 
-  createComputed(() => {
+  onMount(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const isHotkeyPressed = propsWithDefaults.hotkey.every(key => (event as any)[key] || event.code === key)
 
