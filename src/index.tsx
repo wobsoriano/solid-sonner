@@ -275,8 +275,8 @@ const Toast: Component<ToastProps> = (props) => {
               <div data-icon="">
                 <Show when={props.toast.promise}>
                   <Loader visible={toastType() === 'loading'} />
-                  {props.toast.icon || getAsset(toastType()!)}
                 </Show>
+                {props.toast.icon || getAsset(toastType()!)}
               </div>
             </Show>
 
