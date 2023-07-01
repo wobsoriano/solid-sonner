@@ -13,6 +13,7 @@
   width: 400px;
   position: relative;
   mask-image: linear-gradient(to top, transparent 0%, black 35%);
+  -webkit-mask-image: linear-gradient(to top, transparent 0%, black 35%);
   opacity: 1;
 }
 
