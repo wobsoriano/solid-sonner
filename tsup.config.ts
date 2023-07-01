@@ -10,5 +10,9 @@ export default defineConfig(
     // writePackageJson: true,
     dropConsole: true,
     cjs: true,
+    tsupOptions(config) {
+      config.injectStyle = true
+      return config
+    },
   },
 )
