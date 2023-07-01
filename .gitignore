@@ -5,3 +5,6 @@ gitignore
 
 # tsup
 tsup.config.bundled_*.{m,c,}s
+/test-results/
+/playwright-report/
+/playwright/.cache/

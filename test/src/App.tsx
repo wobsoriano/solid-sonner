@@ -1,9 +1,9 @@
 import { Show, createSignal } from 'solid-js'
-import { Toaster, toast } from '../src'
+import { Toaster, toast } from 'solid-sonner'
 
 const promise = () => new Promise(resolve => setTimeout(resolve, 2000))
 
-export default function Basic() {
+export default function App() {
   const [showAutoClose, setShowAutoClose] = createSignal(false)
   const [showDismiss, setShowDismiss] = createSignal(false)
 

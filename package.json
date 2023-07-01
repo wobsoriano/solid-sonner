@@ -47,9 +47,10 @@
   "browser": {},
   "scripts": {
     "dev": "vite serve dev",
+    "dev:lib": "tsup --watch",
     "build": "tsup",
     "dev:build": "vite build dev",
-    "test": "vitest",
+    "test": "playwright test",
     "prepublishOnly": "pnpm build",
     "update-deps": "pnpm up -Li",
     "typecheck": "tsc --noEmit",
@@ -62,6 +63,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config-ts": "^0.39.6",
+    "@playwright/test": "^1.35.1",
     "@solidjs/testing-library": "^0.8.3",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/user-event": "^14.4.3",
@@ -80,8 +82,7 @@
     "tsup-preset-solid": "^0.1.8",
     "typescript": "^5.1.6",
     "vite": "^4.3.9",
-    "vite-plugin-solid": "^2.7.0",
-    "vitest": "^0.32.2"
+    "vite-plugin-solid": "^2.7.0"
   },
   "eslintConfig": {
     "plugins": [
