@@ -61,10 +61,6 @@
   "peerDependencies": {
     "solid-js": "^1.6.0"
   },
-  "dependencies": {
-    "copy-to-clipboard": "^3.3.3",
-    "highlight.js": "^11.8.0"
-  },
   "devDependencies": {
     "@antfu/eslint-config-ts": "^0.39.6",
     "@solidjs/testing-library": "^0.8.3",
@@ -73,10 +69,12 @@
     "@types/testing-library__jest-dom": "^5.14.6",
     "bumpp": "^9.1.1",
     "concurrently": "^8.2.0",
+    "copy-to-clipboard": "^3.3.3",
     "esbuild": "^0.18.10",
     "esbuild-plugin-solid": "^0.5.0",
     "eslint": "^8.44.0",
     "eslint-plugin-solid": "^0.12.1",
+    "highlight.js": "^11.8.0",
     "jsdom": "^22.1.0",
     "solid-js": "^1.7.7",
     "tsup": "^7.1.0",

@@ -4,14 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-dependencies:
-  copy-to-clipboard:
-    specifier: ^3.3.3
-    version: 3.3.3
-  highlight.js:
-    specifier: ^11.8.0
-    version: 11.8.0
-
 devDependencies:
   '@antfu/eslint-config-ts':
     specifier: ^0.39.6
@@ -34,6 +26,9 @@ devDependencies:
   concurrently:
     specifier: ^8.2.0
     version: 8.2.0
+  copy-to-clipboard:
+    specifier: ^3.3.3
+    version: 3.3.3
   esbuild:
     specifier: ^0.18.10
     version: 0.18.10
@@ -46,6 +41,9 @@ devDependencies:
   eslint-plugin-solid:
     specifier: ^0.12.1
     version: 0.12.1(eslint@8.44.0)(typescript@5.1.6)
+  highlight.js:
+    specifier: ^11.8.0
+    version: 11.8.0
   jsdom:
     specifier: ^22.1.0
     version: 22.1.0
@@ -1827,7 +1825,7 @@ packages:
     resolution: {integrity: sha512-2KV8NhB5JqC3ky0r9PMCAZKbUHSwtEo4CwCs0KXgruG43gX5PMqDEBbVU4OUzw2MuAWUfsuFmWvEKG5QRfSnJA==}
     dependencies:
       toggle-selection: 1.0.6
-    dev: false
+    dev: true
 
   /cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
@@ -2922,7 +2920,7 @@ packages:
   /highlight.js@11.8.0:
     resolution: {integrity: sha512-MedQhoqVdr0U6SSnWPzfiadUcDHfN/Wzq25AkXiQv9oiOO/sG0S7XkvpFIqWBl9Yq1UYyYOOVORs5UW2XlPyzg==}
     engines: {node: '>=12.0.0'}
-    dev: false
+    dev: true
 
   /hosted-git-info@2.8.9:
     resolution: {integrity: sha512-mxIDAb9Lsm6DoOJ7xH+5+X4y1LU/4Hi50L9C5sIswK3JzULS4bwk1FvjdBgvYR4bzT4tuUQiC15FE2f5HbLvYw==}
@@ -4484,7 +4482,7 @@ packages:
 
   /toggle-selection@1.0.6:
     resolution: {integrity: sha512-BiZS+C1OS8g/q2RRbJmy59xpyghNBqrr6k5L/uKBGRsTfxmu3ffiRnd8mlGPUVayg8pvfi5urfnu8TU7DVOkLQ==}
-    dev: false
+    dev: true
 
   /tough-cookie@4.1.2:
     resolution: {integrity: sha512-G9fqXWoYFZgTc2z8Q5zaHy/vJMjm+WV0AkAeHxVCQiEB1b+dGvWzFW6QV07cY5jQ5gRkeid2qIkzkxUnmoQZUQ==}
