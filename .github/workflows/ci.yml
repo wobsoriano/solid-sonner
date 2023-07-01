@@ -87,7 +87,7 @@ jobs:
         run: nr build
 
       - name: Playwright Install
-        run: nr playwright install --with-deps
+        run: npx playwright install
 
       - name: Test
         run: nr test
