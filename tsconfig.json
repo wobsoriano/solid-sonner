@@ -15,10 +15,7 @@
     "noUncheckedIndexedAccess": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "baseUrl": ".",
-    "paths": {
-      "solid-sonner": ["./src"]
-    }
+    "baseUrl": "."
   },
   "exclude": ["node_modules", "dist", "./dev"]
 }

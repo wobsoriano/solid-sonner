@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [
     solidPlugin(),
     {
-      name: 'Reaplace env variables',
+      name: 'Replace env variables',
       transform(code, id) {
         if (id.includes('node_modules'))
           return code
