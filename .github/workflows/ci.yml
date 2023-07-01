@@ -62,7 +62,7 @@ jobs:
 
     strategy:
       matrix:
-        node: [16.x, 18.x]
+        node: 16
         os: [ubuntu-latest]
       fail-fast: false
 
