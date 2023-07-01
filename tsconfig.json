@@ -17,5 +17,5 @@
     "jsxImportSource": "solid-js",
     "baseUrl": "."
   },
-  "exclude": ["node_modules", "dist", "./dev"]
+  "exclude": ["node_modules", "dist", "./dev", "./website"]
 }
