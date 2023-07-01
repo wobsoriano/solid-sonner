@@ -15,7 +15,6 @@
     "noUncheckedIndexedAccess": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "types": ["@testing-library/jest-dom"],
     "baseUrl": ".",
     "paths": {
       "solid-sonner": ["./src"]
