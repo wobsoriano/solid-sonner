@@ -162,7 +162,7 @@ const Toast: Component<ToastProps> = (props) => {
       data-sonner-toast=""
       data-styled={!props.toast.jsx}
       data-mounted={mounted()}
-      data-promise={Boolean(toast.promise)}
+      data-promise={Boolean(props.toast.promise)}
       data-removed={removed()}
       data-visible={isVisible()}
       data-y-position={coords()[0]}
@@ -271,9 +271,9 @@ const Toast: Component<ToastProps> = (props) => {
         when={props.toast.jsx || props.toast.title instanceof Element}
         fallback={
           <>
-            <Show when={toastType || props.toast.icon || toast.promise}>
+            <Show when={toastType || props.toast.icon || props.toast.promise}>
               <div data-icon="">
-                <Show when={toast.promise}>
+                <Show when={props.toast.promise}>
                   <Loader visible={toastType() === 'loading'} />
                   {props.toast.icon || getAsset(toastType()!)}
                 </Show>
