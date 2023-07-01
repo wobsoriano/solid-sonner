@@ -19,7 +19,6 @@
   "keywords": [
     "solid"
   ],
-  "sideEffects": false,
   "exports": {
     "solid": {
       "development": "./dist/dev.jsx",
