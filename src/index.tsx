@@ -271,7 +271,7 @@ const Toast: Component<ToastProps> = (props) => {
         when={props.toast.jsx || props.toast.title instanceof Element}
         fallback={
           <>
-            <Show when={toastType || props.toast.icon || props.toast.promise}>
+            <Show when={toastType() || props.toast.icon || props.toast.promise}>
               <div data-icon="">
                 <Show when={props.toast.promise}>
                   <Loader visible={toastType() === 'loading'} />
