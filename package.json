@@ -47,7 +47,6 @@
   "browser": {},
   "scripts": {
     "dev": "vite serve dev",
-    "dev:lib": "tsup --watch",
     "build": "tsup",
     "dev:build": "vite build dev",
     "test": "playwright test",
