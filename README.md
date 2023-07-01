@@ -178,7 +178,7 @@ You can style your toasts globally with the `toastOptions` prop in the `Toaster`
 
 ```jsx
 <Toaster
-  toastOptions={{ style: { background: 'red' }, className: 'my-toast', descriptionClassName: 'my-toast-description' }}
+  toastOptions={{ style: { background: 'red' }, class: 'my-toast', descriptionClass: 'my-toast-description' }}
 />
 ```
 
@@ -189,8 +189,8 @@ toast('Event has been created', {
   style: {
     background: 'red',
   },
-  className: 'my-toast',
-  descriptionClassName: 'my-toast-description',
+  class: 'my-toast',
+  descriptionClass: 'my-toast-description',
 })
 ```
 
