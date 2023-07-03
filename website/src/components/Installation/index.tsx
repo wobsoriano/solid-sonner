@@ -18,7 +18,7 @@ export function Installation() {
     <div>
       <h2>Installation</h2>
       <code class={styles.code} onClick={onCopy}>
-        npm install sonner{' '}
+        npm install solid-sonner{' '}
         <button aria-label="Copy code" class={styles.copy}>
               {copying()
                 ? (
