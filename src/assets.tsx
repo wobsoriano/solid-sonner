@@ -16,7 +16,7 @@ export function Loader(props: { visible: boolean }) {
   )
 }
 
-const SuccessIcon = (
+const SuccessIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" height="20" width="20">
     <path
       fill-rule="evenodd"
@@ -26,7 +26,7 @@ const SuccessIcon = (
   </svg>
 )
 
-const InfoIcon = (
+const InfoIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" height="20" width="20">
     <path
       fill-rule="evenodd"
@@ -36,7 +36,7 @@ const InfoIcon = (
   </svg>
 )
 
-const ErrorIcon = (
+const ErrorIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" height="20" width="20">
     <path
       fill-rule="evenodd"
@@ -46,15 +46,7 @@ const ErrorIcon = (
   </svg>
 )
 
-export function getAsset(type: ToastTypes): JSX.Element | null {
-  switch (type) {
-    case 'success':
-      return SuccessIcon
-
-    case 'error':
-      return ErrorIcon
-
-    default:
-      return null
-  }
-}
+export const getAsset = {
+  success: SuccessIcon,
+  error: ErrorIcon
+} as Record<ToastTypes, () => JSX.Element>

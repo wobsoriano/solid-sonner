@@ -1,5 +1,6 @@
 import './styles.css'
-import type { Component, JSX, Setter } from 'solid-js'
+import type { Component, JSX, Setter, ValidComponent } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
 import { For, Show, createComputed, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
 import { Loader, getAsset } from './assets'
 import type { ExternalToast, HeightT, Position, ToastT, ToastToDismiss, ToasterProps } from './types'
@@ -276,7 +277,7 @@ const Toast: Component<ToastProps> = (props) => {
                 <Show when={props.toast.promise}>
                   <Loader visible={toastType() === 'loading'} />
                 </Show>
-                {props.toast.icon || getAsset(toastType()!)}
+                <Dynamic component={(props.toast.icon || getAsset[toastType()!]) as ValidComponent} />
               </div>
             </Show>
 
