@@ -1,3 +1,10 @@
+/*!
+ * Original code by Emil Kowalski
+ * MIT Licensed, Copyright 2023 Emil Kowalski, see https://github.com/emilkowalski/sonner/blob/main/LICENSE.md for details
+ *
+ * Credits:
+ * https://github.com/emilkowalski/sonner/blob/main/src/index.tsx
+ */
 import './styles.css'
 import type { Component, JSX, Setter, ValidComponent } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
