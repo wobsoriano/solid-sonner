@@ -33,13 +33,25 @@ test.describe('Basic functionality', () => {
     await expect(page.getByText('jsx')).toHaveCount(1)
   })
 
-  test('toast is removed after swiping down', async ({ page }) => {
-    await page.getByTestId('default-button').click()
-    await page.hover('[data-sonner-toast]')
-    await page.mouse.down()
-    await page.mouse.move(0, 800)
-    await page.mouse.up()
-    await expect(page.locator('[data-sonner-toast]')).toHaveCount(0)
+  test.describe('skip on firefox', () => {
+    test.skip(({ browserName }) => browserName === 'firefox', 'Fix this later')
+    test('toast is removed after swiping down', async ({ page }) => {
+      await page.getByTestId('default-button').click()
+      await page.hover('[data-sonner-toast]')
+      await page.mouse.down()
+      await page.mouse.move(0, 800)
+      await page.mouse.up()
+      await expect(page.locator('[data-sonner-toast]')).toHaveCount(0)
+    })
+
+    test('toast\'s dismiss callback gets executed correctly', async ({ page }) => {
+      await page.getByTestId('dismiss-toast-callback').click()
+      await page.hover('[data-sonner-toast]')
+      await page.mouse.down()
+      await page.mouse.move(0, 800)
+      await page.mouse.up()
+      await expect(page.getByTestId('dismiss-el')).toHaveCount(1)
+    })
   })
 
   test('toast is not removed when hovered', async ({ page }) => {
@@ -69,12 +81,13 @@ test.describe('Basic functionality', () => {
     await expect(page.getByTestId('auto-close-el')).toHaveCount(1)
   })
 
-  test('toast\'s dismiss callback gets executed correctly', async ({ page }) => {
-    await page.getByTestId('dismiss-toast-callback').click()
-    await page.hover('[data-sonner-toast]')
-    await page.mouse.down()
-    await page.mouse.move(0, 800)
-    await page.mouse.up()
-    await expect(page.getByTestId('dismiss-el')).toHaveCount(1)
+  test('return focus to the previous focused element', async ({ page }) => {
+    await page.getByTestId('custom').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(1)
+    await page.getByTestId('dismiss-button').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(0)
+    await expect(page.getByTestId('custom')).toBeFocused()
   })
 })

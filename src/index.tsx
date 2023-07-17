@@ -12,6 +12,7 @@ import { For, Show, createComputed, createMemo, createSignal, mergeProps, onClea
 import { Loader, getAsset } from './assets'
 import type { ExternalToast, HeightT, Position, ToastT, ToastToDismiss, ToasterProps } from './types'
 import { ToastState, toast } from './state'
+import { createDeepSignal } from './utils'
 
 // Visible toasts amount
 const VISIBLE_TOASTS_AMOUNT = 3
@@ -346,7 +347,8 @@ const Toaster: Component<ToasterProps> = (props) => {
   const coords = createMemo(() => propsWithDefaults.position.split('-'))
   let listRef: HTMLOListElement
   const hotkeyLabel = createMemo(() => propsWithDefaults.hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, ''))
-
+  const [lastFocusedElementRef, setLastFocusedElementRef] = createDeepSignal<HTMLElement | null>(null)
+  const [isFocusedWithinRef, setIsFocusedWithinRef] = createSignal(false)
   const removeToast = (toast: ToastT) => setToasts(toasts => toasts.filter(({ id }) => id !== toast.id))
 
   onMount(() => {
@@ -406,6 +408,18 @@ const Toaster: Component<ToasterProps> = (props) => {
     })
   })
 
+  createComputed(() => {
+    if (listRef) {
+      onCleanup(() => {
+        if (lastFocusedElementRef()) {
+          lastFocusedElementRef()?.focus({ preventScroll: true })
+          setLastFocusedElementRef(null)
+          setIsFocusedWithinRef(false)
+        }
+      })
+    }
+  })
+
   return (
     <Show when={toasts().length > 0}>
       {/* Remove item from normal navigation flow, only available via hotkey */}
@@ -428,6 +442,21 @@ const Toaster: Component<ToasterProps> = (props) => {
               ...propsWithDefaults.style,
             }
           }
+          onBlur={(event) => {
+            if (isFocusedWithinRef() && !event.currentTarget.contains(event.relatedTarget as HTMLElement)) {
+              setIsFocusedWithinRef(false)
+              if (lastFocusedElementRef()) {
+                lastFocusedElementRef()?.focus({ preventScroll: true })
+                setLastFocusedElementRef(null)
+              }
+            }
+          }}
+          onFocus={(event) => {
+            if (!isFocusedWithinRef()) {
+              setIsFocusedWithinRef(true)
+              setLastFocusedElementRef(event.relatedTarget as HTMLElement)
+            }
+          }}
           onMouseEnter={() => setExpanded(true)}
           onMouseMove={() => setExpanded(true)}
           onMouseLeave={() => {
