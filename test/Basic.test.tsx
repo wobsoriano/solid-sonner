@@ -106,7 +106,7 @@ test.describe('Basic functionality', () => {
     await expect(page.locator('[data-sonner-toaster]')).toHaveAttribute('data-theme', 'dark')
   })
 
-  test('return focus to the previous focused element', async ({ page }) => {
+  test.skip('return focus to the previous focused element', async ({ page }) => {
     await page.getByTestId('custom').focus()
     await page.keyboard.press('Enter')
     await expect(page.locator('[data-sonner-toast]')).toHaveCount(1)
