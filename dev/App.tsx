@@ -1,4 +1,5 @@
 import { Show, createSignal } from 'solid-js'
+import type { Position, ToasterProps } from 'src/types'
 import { Toaster, toast } from '../src'
 
 const promise = () => new Promise(resolve => setTimeout(resolve, 2000))
@@ -6,11 +7,19 @@ const promise = () => new Promise(resolve => setTimeout(resolve, 2000))
 export default function App() {
   const [showAutoClose, setShowAutoClose] = createSignal(false)
   const [showDismiss, setShowDismiss] = createSignal(false)
+  const { searchParams } = new URL(document.location as unknown as URL)
+  const [theme, setTheme] = createSignal<ToasterProps['theme']>(searchParams.get('theme') as ToasterProps['theme'] || 'light')
 
   return (
     <>
+      <button data-testid="theme-button" class="button" onClick={() => setTheme('dark')}>
+        Change theme
+      </button>
       <button data-testid="default-button" class="button" onClick={() => toast('My Toast')}>
         Render Toast
+      </button>
+      <button data-testid="default-button-top" class="button" onClick={() => toast('My Toast')}>
+        Render Toast Top
       </button>
       <button data-testid="success" class="button" onClick={() => toast.success('My Success Toast')}>
         Render Success Toast
@@ -109,7 +118,7 @@ export default function App() {
       <Show when={showDismiss()}>
         <div data-testid="dismiss-el" />
       </Show>
-      <Toaster richColors />
+      <Toaster position={searchParams.get('position') as Position || 'bottom-right'} richColors theme={theme()} />
     </>
   )
 }

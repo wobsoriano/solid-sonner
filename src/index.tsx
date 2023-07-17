@@ -12,7 +12,6 @@ import { For, Show, createComputed, createMemo, createSignal, mergeProps, onClea
 import { Loader, getAsset } from './assets'
 import type { ExternalToast, HeightT, Position, ToastT, ToastToDismiss, ToasterProps } from './types'
 import { ToastState, toast } from './state'
-import { createDeepSignal } from './utils'
 
 // Visible toasts amount
 const VISIBLE_TOASTS_AMOUNT = 3
@@ -347,8 +346,17 @@ const Toaster: Component<ToasterProps> = (props) => {
   const coords = createMemo(() => propsWithDefaults.position.split('-'))
   let listRef: HTMLOListElement
   const hotkeyLabel = createMemo(() => propsWithDefaults.hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, ''))
-  const [lastFocusedElementRef, setLastFocusedElementRef] = createDeepSignal<HTMLElement | null>(null)
+  const [lastFocusedElementRef, setLastFocusedElementRef] = createSignal<HTMLElement | null>(null)
   const [isFocusedWithinRef, setIsFocusedWithinRef] = createSignal(false)
+  const [actualTheme, setActualTheme] = createSignal(
+    propsWithDefaults.theme !== 'system'
+      ? propsWithDefaults.theme
+      : typeof window !== 'undefined'
+        ? window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+        : 'light',
+  )
   const removeToast = (toast: ToastT) => setToasts(toasts => toasts.filter(({ id }) => id !== toast.id))
 
   onMount(() => {
@@ -376,6 +384,24 @@ const Toaster: Component<ToasterProps> = (props) => {
 
     onCleanup(() => {
       unsub()
+    })
+  })
+
+  createComputed(() => {
+    if (propsWithDefaults.theme !== 'system') {
+      setActualTheme(propsWithDefaults.theme)
+      return
+    }
+
+    if (typeof window === 'undefined')
+      return
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ({ matches }) => {
+      if (matches)
+        setActualTheme('dark')
+
+      else
+        setActualTheme('light')
     })
   })
 
@@ -429,7 +455,7 @@ const Toaster: Component<ToasterProps> = (props) => {
           ref={listRef!}
           class={propsWithDefaults.class}
           data-sonner-toaster
-          data-theme={propsWithDefaults.theme}
+          data-theme={actualTheme()}
           data-rich-colors={propsWithDefaults.richColors}
           data-y-position={coords()[0]}
           data-x-position={coords()[1]}
