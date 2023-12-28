@@ -1,6 +1,6 @@
 import type { Component, Setter } from 'solid-js'
 import { For } from 'solid-js'
-import { toast } from 'solid-sonner'
+import { toast } from 'src/'
 import { CodeBlock } from '../CodeBlock'
 
 const positions = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'] as const

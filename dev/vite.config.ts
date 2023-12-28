@@ -31,7 +31,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      'solid-sonner': path.resolve(__dirname, '../src'),
+      src: path.resolve(__dirname, '../src'),
     },
   },
 })

@@ -1,5 +1,5 @@
 import { For, createSignal } from 'solid-js'
-import { toast } from 'solid-sonner'
+import { toast } from 'src/'
 import { CodeBlock } from '../CodeBlock'
 
 // eslint-disable-next-line no-template-curly-in-string

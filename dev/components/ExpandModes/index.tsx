@@ -1,4 +1,4 @@
-import { toast } from 'solid-sonner'
+import { toast } from 'src/'
 import type { Setter } from 'solid-js'
 import { CodeBlock } from '../CodeBlock'
 

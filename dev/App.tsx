@@ -1,5 +1,5 @@
 import { createSignal } from 'solid-js'
-import { Toaster } from '../src'
+import { Toaster } from 'src/'
 
 import { Hero } from './components/Hero'
 import { Types } from './components/Types'

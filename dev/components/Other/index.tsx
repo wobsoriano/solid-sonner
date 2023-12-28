@@ -1,6 +1,6 @@
 import type { Setter } from 'solid-js'
 import { For, createMemo, createSignal } from 'solid-js'
-import { toast } from 'solid-sonner'
+import { toast } from 'src/'
 import { CodeBlock } from '../CodeBlock'
 import styles from './other.module.css'
 
