@@ -28,3 +28,17 @@ test('show correct toast content based on promise state', async ({ page }) => {
   await expect(page.getByText('Loading...')).toHaveCount(1)
   await expect(page.getByText('Solid Sonner toast has been added')).toHaveCount(1)
 })
+
+test('render custom component in toast', async ({ page }) => {
+  await page.getByTestId('Custom').click()
+  await expect(page.getByText('A custom toast with default styling')).toHaveCount(1)
+})
+
+test('toast is removed after swiping down', async ({ page }) => {
+  await page.getByTestId('default-button').click()
+  await page.hover('[data-sonner-toast]')
+  await page.mouse.down()
+  await page.mouse.move(0, 800)
+  await page.mouse.up()
+  await expect(page.locator('[data-sonner-toast]')).toHaveCount(0)
+})
