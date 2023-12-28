@@ -64,8 +64,8 @@ toast.promise(promise, {
         () =>
           new Promise((resolve) => {
             setTimeout(() => {
-              resolve({ name: 'Sonner' })
-            }, 2000)
+              resolve({ name: 'Solid Sonner' })
+            }, 1500)
           }),
         {
           loading: 'Loading...',
@@ -94,6 +94,7 @@ export function Types() {
         <For each={allTypes}>{type => (
           <button
             class="button"
+            data-testid={type.name}
             data-active={activeType()?.name === type.name}
             onClick={() => {
               type.action()

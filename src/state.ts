@@ -31,7 +31,7 @@ class Observer {
     this.toasts = [...this.toasts, data]
   }
 
-  create = (data: ExternalToast & { message?: string | JSX.Element; type?: ToastTypes }) => {
+  create = (data: ExternalToast & { message?: string | JSX.Element; type?: ToastTypes; promise?: PromiseT }) => {
     const { message, ...rest } = data
     const id = typeof data?.id === 'number' || (data.id && data.id?.length > 0) ? data.id : toastsCounter++
 
@@ -80,15 +80,58 @@ class Observer {
   }
 
   promise = <ToastData>(promise: PromiseT<ToastData>, data?: PromiseData<ToastData>) => {
-    const id = this.create({ ...data, promise, type: 'loading', message: data?.loading })
+    if (!data) {
+      // Nothing to show
+      return
+    }
+
+    let id: string | number | undefined
+    if (data.loading !== undefined) {
+      id = this.create({
+        ...data,
+        promise,
+        type: 'loading',
+        message: data.loading,
+      })
+    }
+
     const p = promise instanceof Promise ? promise : promise()
-    p.then((promiseData) => {
-      const message = typeof data?.success === 'function' ? data?.success(promiseData) : data?.success
-      this.create({ id, type: 'success', message })
-    }).catch((error) => {
-      const message = typeof data?.error === 'function' ? data?.error(error) : data?.error
-      this.create({ id, type: 'error', message })
+
+    let shouldDismiss = id !== undefined
+
+    p.then((response) => {
+      // TODO: Clean up TS here, response has incorrect type
+      // @ts-expect-error: Incorrect response type
+      if (response && typeof response.ok === 'boolean' && !response.ok) {
+        shouldDismiss = false
+        const message
+          // @ts-expect-error: Incorrect response type
+          = typeof data.error === 'function' ? data.error(`HTTP error! status: ${response.status}`) : data.error
+        this.create({ id, type: 'error', message })
+      }
+      else if (data.success !== undefined) {
+        shouldDismiss = false
+        const message = typeof data.success === 'function' ? data.success(response) : data.success
+        this.create({ id, type: 'success', message })
+      }
     })
+      .catch((error) => {
+        if (data.error !== undefined) {
+          shouldDismiss = false
+          const message = typeof data.error === 'function' ? data.error(error) : data.error
+          this.create({ id, type: 'error', message })
+        }
+      })
+      .finally(() => {
+        if (shouldDismiss) {
+          // Toast is still in load state (and will be indefinitely — dismiss it)
+          this.dismiss(id)
+          id = undefined
+        }
+
+        data.finally?.()
+      })
+
     return id
   }
 
@@ -96,6 +139,7 @@ class Observer {
   custom = (jsx: (id: number | string) => JSX.Element, data?: ExternalToast) => {
     const id = data?.id || toastsCounter++
     this.publish({ jsx: jsx(id), id, ...data })
+    return id
   }
 }
 
