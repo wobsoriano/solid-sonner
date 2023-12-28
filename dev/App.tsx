@@ -1,124 +1,36 @@
-import { Show, createSignal } from 'solid-js'
-import type { Position, ToasterProps } from 'src/types'
-import { Toaster, toast } from '../src'
+import { createSignal } from 'solid-js'
+import { Toaster } from '../src'
 
-const promise = () => new Promise(resolve => setTimeout(resolve, 2000))
+import { Hero } from './components/Hero'
+import { Types } from './components/Types'
+import { ExpandModes } from './components/ExpandModes'
+import { Footer } from './components/Footer'
+import { Position } from './components/Position'
+import { Installation } from './components/Installation'
+import { Usage } from './components/Usage'
+import { Other } from './components/Other'
 
-export default function App() {
-  const [showAutoClose, setShowAutoClose] = createSignal(false)
-  const [showDismiss, setShowDismiss] = createSignal(false)
-  const { searchParams } = new URL(document.location as unknown as URL)
-  const [theme, setTheme] = createSignal<ToasterProps['theme']>(searchParams.get('theme') as ToasterProps['theme'] || 'light')
+export default function Home() {
+  const [expand, setExpand] = createSignal(false)
+  const [position, setPosition] = createSignal<any>('bottom-right')
+  const [richColors, setRichColors] = createSignal(false)
+  const [closeButton, setCloseButton] = createSignal(false)
 
   return (
     <>
-      <button data-testid="theme-button" class="button" onClick={() => setTheme('dark')}>
-        Change theme
-      </button>
-      <button data-testid="default-button" class="button" onClick={() => toast('My Toast')}>
-        Render Toast
-      </button>
-      <button data-testid="default-button-top" class="button" onClick={() => toast('My Toast')}>
-        Render Toast Top
-      </button>
-      <button data-testid="success" class="button" onClick={() => toast.success('My Success Toast')}>
-        Render Success Toast
-      </button>
-      <button data-testid="error" class="button" onClick={() => toast.error('My Error Toast')}>
-        Render Error Toast
-      </button>
-      <button
-        data-testid="action"
-        class="button"
-        onClick={() =>
-          toast('My Message', {
-            action: {
-              label: 'Action',
-              // eslint-disable-next-line no-console
-              onClick: () => console.log('Action'),
-            },
-          })
-        }
-      >
-        Render Action Toast
-      </button>
-      <button
-        data-testid="action-prevent"
-        class="button"
-        onClick={() =>
-          toast('My Message', {
-            action: {
-              label: 'Action',
-              onClick: (event) => {
-                event.preventDefault()
-                // eslint-disable-next-line no-console
-                console.log('Action')
-              },
-            },
-          })
-        }
-      >
-        Render Action Toast
-      </button>
-      <button
-        data-testid="promise"
-        class="button"
-        onClick={() =>
-          toast.promise(promise, {
-            loading: 'Loading...',
-            success: 'Loaded',
-            error: 'Error',
-          })
-        }
-      >
-        Render Promise Toast
-      </button>
-      <button
-        data-testid="custom"
-        class="button"
-        onClick={() =>
-          toast.custom(t => (
-            <div>
-              <h1>jsx</h1>
-              <button data-testid="dismiss-button" onClick={() => toast.dismiss(t)}>Dismiss</button>
-            </div>
-          ))
-        }
-      >
-        Render Custom Toast
-      </button>
-      <button data-testid="infinity-toast" class="button" onClick={() => toast('My Toast', { duration: Number.POSITIVE_INFINITY })}>
-        Render Infinity Toast
-      </button>
-      <button
-        data-testid="auto-close-toast-callback"
-        class="button"
-        onClick={() =>
-          toast('My Toast', {
-            onAutoClose: () => setShowAutoClose(true),
-          })
-        }
-      >
-        Render Toast With onAutoClose callback
-      </button>
-      <button
-        data-testid="dismiss-toast-callback"
-        class="button"
-        onClick={() =>
-          toast('My Toast', {
-            onDismiss: () => setShowDismiss(true),
-          })
-        }
-      >
-        Render Toast With onAutoClose callback
-      </button>
-      <Show when={showAutoClose()}>
-        <div data-testid="auto-close-el" />
-      </Show>
-      <Show when={showDismiss()}>
-        <div data-testid="dismiss-el" />
-      </Show>
-      <Toaster position={searchParams.get('position') as Position || 'bottom-right'} richColors theme={theme()} />
+      <Toaster richColors={richColors()} closeButton={closeButton()} expand={expand()} position={position()} />
+      <main class="container">
+        <Hero />
+        <div class="content">
+          <Installation />
+          <Usage />
+          <Types />
+          <Position position={position()} setPosition={setPosition} />
+          <ExpandModes expand={expand()} setExpand={setExpand} />
+          <Other setCloseButton={setCloseButton} setRichColors={setRichColors} />
+        </div>
+      </main>
+      <Footer />
     </>
   )
 }
