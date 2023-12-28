@@ -8,6 +8,7 @@ export type PromiseData<ToastData = any> = ExternalToast & {
   loading: string | JSX.Element
   success: string | JSX.Element | ((data: ToastData) => JSX.Element | string)
   error: string | JSX.Element | ((error: any) => JSX.Element | string)
+  finally?: () => void | Promise<void>
 }
 
 export interface ToastT {
@@ -78,7 +79,7 @@ export interface ToastToDismiss {
   dismiss: boolean
 }
 
-export type ExternalToast = Omit<ToastT, 'id' | 'type' | 'title'> & {
+export type ExternalToast = Omit<ToastT, 'id' | 'type' | 'title' | 'delete' | 'promise'> & {
   id?: number | string
 }
 

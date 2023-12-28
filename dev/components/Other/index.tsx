@@ -77,6 +77,7 @@ export function Other(props: {
         <For each={allTypes}>{type => (
           <button
             class="button"
+            data-testid={`other-${type.name}`}
             onClick={() => {
               type.action()
               setActiveType(type)
