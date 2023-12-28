@@ -1,7 +1,7 @@
 {
   "name": "solid-sonner",
   "type": "module",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": false,
   "packageManager": "pnpm@8.6.5",
   "description": "An opinionated toast component for Solid.",
