@@ -66,6 +66,22 @@ Renders a checkmark icon in front of the message.
 toast.success('Event has been created')
 ```
 
+### Info
+
+Renders an error icon in front of the message.
+
+```jsx
+toast.info('Event has new information')
+```
+
+### Warning
+
+Renders an error icon in front of the message.
+
+```jsx
+toast.warning('Event has warning')
+```
+
 ### Error
 
 Renders an error icon in front of the message.
@@ -172,9 +188,9 @@ Toasts can also be expanded by default through the `expand` prop. You can also c
 <Toaster expand visibleToasts={9} />
 ```
 
-### Styling for all toasts
+### Styling
 
-You can style your toasts globally with the `toastOptions` prop in the `Toaster` component.
+Styling can be done globally via `toastOptions`, this way every toast will have the same styling.
 
 ```jsx
 <Toaster
@@ -182,7 +198,7 @@ You can style your toasts globally with the `toastOptions` prop in the `Toaster`
 />
 ```
 
-### Styling for individual toast
+You can also use the same props when calling toast to style a specific toast.
 
 ```jsx
 toast('Event has been created', {
@@ -192,6 +208,58 @@ toast('Event has been created', {
   class: 'my-toast',
   descriptionClass: 'my-toast-description',
 })
+```
+
+### Tailwind CSS
+
+The preferred way to style the toasts with tailwind is by using the `unstyled` prop. That will give you an unstyled toast which you can then style with tailwind.
+
+```tsx
+<Toaster
+  toastOptions={{
+    unstyled: true,
+    classes: {
+      toast: 'bg-blue-400',
+      title: 'text-red-400',
+      description: 'text-red-400',
+      actionButton: 'bg-zinc-400',
+      cancelButton: 'bg-orange-400',
+      closeButton: 'bg-lime-400',
+    },
+  }}
+/>
+```
+
+You can do the same when calling `toast()`.
+
+```tsx
+toast('Hello World', {
+  unstyled: true,
+  classes: {
+    toast: 'bg-blue-400',
+    title: 'text-red-400 text-2xl',
+    description: 'text-red-400',
+    actionButton: 'bg-zinc-400',
+    cancelButton: 'bg-orange-400',
+    closeButton: 'bg-lime-400',
+  },
+})
+```
+
+Styling per toast type is also possible.
+
+```tsx
+<Toaster
+  toastOptions={{
+    unstyled: true,
+    classes: {
+      error: 'bg-red-400',
+      success: 'text-green-400',
+      warning: 'text-yellow-400',
+      info: 'bg-blue-400',
+    },
+  }}
+/>
 ```
 
 ### Close button
