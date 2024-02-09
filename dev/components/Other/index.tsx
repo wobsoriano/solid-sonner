@@ -18,6 +18,22 @@ export function Other(props: {
       },
     },
     {
+      name: 'Rich Colors Info',
+      snippet: 'toast.info(\'Info\')',
+      action: () => {
+        toast.info('Be at the area 10 minutes before the event time')
+        props.setRichColors(true)
+      },
+    },
+    {
+      name: 'Rich Colors Warning',
+      snippet: 'toast.warning(\'Warning\')',
+      action: () => {
+        toast.warning('Event start time cannot be earlier than 8am')
+        props.setRichColors(true)
+      },
+    },
+    {
       name: 'Rich Colors Error',
       snippet: 'toast.error(\'Event has not been created\')',
       action: () => {

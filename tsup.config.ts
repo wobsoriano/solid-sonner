@@ -1,3 +1,4 @@
+/* eslint-disable n/prefer-global/process */
 import { defineConfig } from 'tsup'
 import * as preset from 'tsup-preset-solid'
 

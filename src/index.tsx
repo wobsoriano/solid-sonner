@@ -6,11 +6,11 @@
  * https://github.com/emilkowalski/sonner/blob/main/src/index.tsx
  */
 import './styles.css'
-import type { Component, JSX, Setter, ValidComponent } from 'solid-js'
+import type { Component, ValidComponent } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 import { For, Show, createComputed, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
 import { Loader, getAsset } from './assets'
-import type { ExternalToast, HeightT, Position, ToastT, ToastToDismiss, ToasterProps } from './types'
+import type { ExternalToast, HeightT, Position, ToastProps, ToastT, ToastToDismiss, ToasterProps } from './types'
 import { ToastState, toast } from './state'
 
 // Visible toasts amount
@@ -32,24 +32,8 @@ const SWIPE_TRESHOLD = 20
 
 const TIME_BEFORE_UNMOUNT = 200
 
-interface ToastProps {
-  toast: ToastT
-  toasts: ToastT[]
-  index: number
-  expanded: boolean
-  invert: boolean
-  heights: HeightT[]
-  setHeights: Setter<HeightT[]>
-  removeToast: (toast: ToastT) => void
-  position: Position
-  visibleToasts: number
-  expandByDefault: boolean
-  closeButton: boolean
-  interacting: boolean
-  style?: JSX.CSSProperties
-  duration?: number
-  class?: string
-  descriptionClass?: string
+function _cn(...classes: (string | undefined)[]) {
+  return classes.filter(Boolean).join(' ')
 }
 
 const Toast: Component<ToastProps> = (props) => {
@@ -66,13 +50,16 @@ const Toast: Component<ToastProps> = (props) => {
   const toastClassname = createMemo(() => props.toast.class || '')
   const toastDescriptionClassname = createMemo(() => props.toast.descriptionClass || '')
 
+  const propsWithDefaults = mergeProps({
+    gap: GAP,
+  }, props)
+
   // Height index is used to calculate the offset as it gets updated before the toast array, which means we can calculate the new layout faster.
   const heightIndex = createMemo(() => props.heights.findIndex(height => height.toastId === props.toast.id) || 0)
   const duration = createMemo(() => props.toast.duration || props.duration || TOAST_LIFETIME)
   const [offset, setOffset] = createSignal(0)
-  const [closeTimerStartTimeRef, setCloseTimerStartTimeRef] = createSignal(0)
-  const [closeTimerRemainingTimeRef, setCloseTimerRemainingTimeRef] = createSignal(duration())
-  const [lastCloseTimerStartTimeRef, setLastCloseTimerStartTimeRef] = createSignal(0)
+  let closeTimerStartTimeRef = 0
+  let lastCloseTimerStartTimeRef = 0
   const [pointerStartRef, setPointerStartRef] = createSignal<{ x: number; y: number } | null>(null)
   const coords = createMemo(() => props.position.split('-'))
   const toastsHeightBefore = createMemo(() => {
@@ -87,8 +74,20 @@ const Toast: Component<ToastProps> = (props) => {
   const invert = createMemo(() => props.toast.invert || props.invert)
   const disabled = createMemo(() => toastType() === 'loading')
 
+  function getLoadingIcon() {
+    if (props.icons?.loading) {
+      return (
+        <div class="sonner-loader" data-visible={toastType() === 'loading'}>
+          {props.icons.loading}
+        </div>
+      )
+    }
+
+    return <Loader visible={toastType() === 'loading'} />
+  }
+
   createComputed(() => {
-    setOffset(heightIndex() * GAP + toastsHeightBefore())
+    setOffset(heightIndex() * propsWithDefaults.gap + toastsHeightBefore())
   })
 
   onMount(() => {
@@ -110,26 +109,28 @@ const Toast: Component<ToastProps> = (props) => {
     if ((props.toast.promise && toastType() === 'loading') || props.toast.duration === Number.POSITIVE_INFINITY)
       return
     let timeoutId: ReturnType<typeof setTimeout>
+    let remainingTime = duration()
 
     // Pause the timer on each hover
     const pauseTimer = () => {
-      if (lastCloseTimerStartTimeRef() < closeTimerStartTimeRef()) {
+      if (lastCloseTimerStartTimeRef < closeTimerStartTimeRef) {
         // Get the elapsed time since the timer started
-        const elapsedTime = new Date().getTime() - closeTimerStartTimeRef()
+        const elapsedTime = new Date().getTime() - closeTimerStartTimeRef
 
-        setCloseTimerRemainingTimeRef(prev => prev - elapsedTime)
+        remainingTime = remainingTime - elapsedTime
       }
 
-      setLastCloseTimerStartTimeRef(new Date().getTime())
+      lastCloseTimerStartTimeRef = new Date().getTime()
     }
 
     const startTimer = () => {
-      setCloseTimerStartTimeRef(new Date().getTime())
+      closeTimerStartTimeRef = new Date().getTime()
+
       // Let the toast know it has started
       timeoutId = setTimeout(() => {
         props.toast.onAutoClose?.(props.toast)
         deleteToast()
-      }, closeTimerRemainingTimeRef())
+      }, remainingTime)
     }
 
     if (props.expanded || props.interacting)
@@ -166,9 +167,17 @@ const Toast: Component<ToastProps> = (props) => {
       role="status"
       tabIndex={0}
       ref={toastRef!}
-      class={`${props.class} ${toastClassname()}`}
+      class={_cn(
+        props.class,
+        toastClassname(),
+        props.classes?.toast,
+        props.toast?.classes?.toast,
+        props.classes?.default,
+        props.classes?.[toastType() as keyof typeof props.classes],
+        props.toast?.classes?.[toastType() as keyof typeof props.classes],
+      )}
       data-sonner-toast=""
-      data-styled={!props.toast.jsx}
+      data-styled={!(props.toast.jsx || props.toast.unstyled || props.unstyled)}
       data-mounted={mounted()}
       data-promise={Boolean(props.toast.promise)}
       data-removed={removed()}
@@ -258,6 +267,7 @@ const Toast: Component<ToastProps> = (props) => {
                     props.toast.onDismiss?.(props.toast)
                   }
             }
+            class={_cn(props.classes?.closeButton, props.toast?.classes?.closeButton)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -281,17 +291,27 @@ const Toast: Component<ToastProps> = (props) => {
           <>
             <Show when={toastType() || props.toast.icon || props.toast.promise}>
               <div data-icon="">
-                <Show when={props.toast.promise}>
-                  <Loader visible={toastType() === 'loading'} />
+                <Show
+                  when={props.toast.promise || toastType() === 'loading'}
+                  fallback={<Dynamic component={getAsset(toastType()!)!} />}
+                >
+                  <Dynamic component={(props.toast.icon || props.icons?.loading || getLoadingIcon()) as ValidComponent} />
                 </Show>
-                <Dynamic component={(props.toast.icon || getAsset[toastType()!]) as ValidComponent} />
               </div>
             </Show>
 
             <div data-content="">
-              <div data-title="">{props.toast.title}</div>
+              <div data-title="" class={_cn(props.classes?.title, props.toast?.classes?.title)}>{props.toast.title}</div>
               <Show when={props.toast.description}>
-                <div data-description="" class={props.descriptionClass + toastDescriptionClassname()}>
+                <div
+                  data-description=""
+                  class={_cn(
+                    props.descriptionClass,
+                    toastDescriptionClassname(),
+                    props.classes?.description,
+                    props.toast?.classes?.description,
+                  )}
+                >
                   {props.toast.description}
                 </div>
               </Show>
@@ -300,11 +320,13 @@ const Toast: Component<ToastProps> = (props) => {
               <button
                   data-button
                   data-cancel
+                  style={props.toast.cancelButtonStyle || props.cancelButtonStyle}
                   onClick={() => {
                     deleteToast()
                     if (props.toast.cancel?.onClick)
                       props.toast.cancel.onClick()
                   }}
+                  class={_cn(props.classes?.cancelButton, props.toast?.classes?.cancelButton)}
                 >
                   {props.toast.cancel!.label}
                 </button>
@@ -312,12 +334,14 @@ const Toast: Component<ToastProps> = (props) => {
             <Show when={props.toast.action}>
               <button
                   data-button=""
+                  style={props.toast.actionButtonStyle || props.actionButtonStyle}
                   onClick={(event) => {
                     props.toast.action?.onClick(event)
                     if (event.defaultPrevented)
                       return
                     deleteToast()
                   }}
+                  class={_cn(props.classes?.actionButton, props.toast?.classes?.actionButton)}
                 >
                   {props.toast.action!.label}
                 </button>
@@ -331,19 +355,38 @@ const Toast: Component<ToastProps> = (props) => {
   )
 }
 
+function getDocumentDirection(): ToasterProps['dir'] {
+  if (typeof window === 'undefined')
+    return 'ltr'
+  if (typeof document === 'undefined')
+    return 'ltr' // For Fresh purpose
+
+  const dirAttribute = document.documentElement.getAttribute('dir')
+
+  if (dirAttribute === 'auto' || !dirAttribute)
+    return window.getComputedStyle(document.documentElement).direction as ToasterProps['dir']
+
+  return dirAttribute as ToasterProps['dir']
+}
+
 const Toaster: Component<ToasterProps> = (props) => {
   const propsWithDefaults = mergeProps({
     position: 'bottom-right',
     hotkey: ['altKey', 'KeyT'],
     theme: 'light',
     visibleToasts: VISIBLE_TOASTS_AMOUNT,
+    dir: getDocumentDirection(),
   }, props) as ToasterProps & { position: Position; hotkey: string[]; visibleToasts: number }
 
   const [toasts, setToasts] = createSignal<ToastT[]>([])
+  const possiblePositions = createMemo(() => {
+    return Array.from(
+      new Set([propsWithDefaults.position].concat(toasts().filter(toast => toast.position).map(toast => toast.position as Position))),
+    )
+  })
   const [heights, setHeights] = createSignal<HeightT[]>([])
   const [expanded, setExpanded] = createSignal(false)
   const [interacting, setInteracting] = createSignal(false)
-  const coords = createMemo(() => propsWithDefaults.position.split('-'))
   let listRef: HTMLOListElement
   const hotkeyLabel = createMemo(() => propsWithDefaults.hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, ''))
   const [lastFocusedElementRef, setLastFocusedElementRef] = createSignal<HTMLElement | null>(null)
@@ -450,75 +493,92 @@ const Toaster: Component<ToasterProps> = (props) => {
     <Show when={toasts().length > 0}>
       {/* Remove item from normal navigation flow, only available via hotkey */}
       <section aria-label={`Notifications ${hotkeyLabel()}`} tabIndex={-1}>
-        <ol
-          tabIndex={-1}
-          ref={listRef!}
-          class={propsWithDefaults.class}
-          data-sonner-toaster
-          data-theme={actualTheme()}
-          data-rich-colors={propsWithDefaults.richColors}
-          data-y-position={coords()[0]}
-          data-x-position={coords()[1]}
-          style={
-            {
-              '--front-toast-height': `${heights()[0]?.height}px`,
-              '--offset': typeof propsWithDefaults.offset === 'number' ? `${propsWithDefaults.offset}px` : propsWithDefaults.offset || VIEWPORT_OFFSET,
-              '--width': `${TOAST_WIDTH}px`,
-              '--gap': `${GAP}px`,
-              ...propsWithDefaults.style,
-            }
-          }
-          onBlur={(event) => {
-            if (isFocusedWithinRef() && !event.currentTarget.contains(event.relatedTarget as HTMLElement)) {
-              setIsFocusedWithinRef(false)
-              if (lastFocusedElementRef()) {
-                lastFocusedElementRef()?.focus({ preventScroll: true })
-                setLastFocusedElementRef(null)
+        <For each={possiblePositions()}>
+          {(position, index) => {
+            const [y, x] = position.split('-')
+            return (
+              <ol
+              tabIndex={-1}
+              ref={listRef!}
+              dir={propsWithDefaults.dir === 'auto' ? getDocumentDirection() : propsWithDefaults.dir}
+              class={propsWithDefaults.class}
+              data-sonner-toaster
+              data-theme={actualTheme()}
+              data-rich-colors={propsWithDefaults.richColors}
+              data-y-position={y}
+              data-x-position={x}
+              style={
+                {
+                  '--front-toast-height': `${heights()[0]?.height}px`,
+                  '--offset': typeof propsWithDefaults.offset === 'number' ? `${propsWithDefaults.offset}px` : propsWithDefaults.offset || VIEWPORT_OFFSET,
+                  '--width': `${TOAST_WIDTH}px`,
+                  '--gap': `${GAP}px`,
+                  ...propsWithDefaults.style,
+                }
               }
-            }
+              onBlur={(event) => {
+                if (isFocusedWithinRef() && !event.currentTarget.contains(event.relatedTarget as HTMLElement)) {
+                  setIsFocusedWithinRef(false)
+                  if (lastFocusedElementRef()) {
+                    lastFocusedElementRef()?.focus({ preventScroll: true })
+                    setLastFocusedElementRef(null)
+                  }
+                }
+              }}
+              onFocus={(event) => {
+                if (!isFocusedWithinRef()) {
+                  setIsFocusedWithinRef(true)
+                  setLastFocusedElementRef(event.relatedTarget as HTMLElement)
+                }
+              }}
+              onMouseEnter={() => setExpanded(true)}
+              onMouseMove={() => setExpanded(true)}
+              onMouseLeave={() => {
+                // Avoid setting expanded to false when interacting with a toast, e.g. swiping
+                if (!interacting())
+                  setExpanded(false)
+              }}
+              onPointerDown={() => {
+                setInteracting(true)
+              }}
+              onPointerUp={() => setInteracting(false)}
+            >
+              <For each={
+                toasts()
+                  .filter(toast => (!toast.position && index() === 0) || toast.position === position)
+              }>
+                {(toast, index) => (
+                  <Toast
+                    index={index()}
+                    icons={propsWithDefaults.icons}
+                    toast={toast}
+                    duration={propsWithDefaults.toastOptions?.duration ?? props.duration}
+                    class={propsWithDefaults.toastOptions?.class}
+                    classes={propsWithDefaults.toastOptions?.classes}
+                    cancelButtonStyle={propsWithDefaults.toastOptions?.cancelButtonStyle}
+                    actionButtonStyle={propsWithDefaults.toastOptions?.actionButtonStyle}
+                    descriptionClass={propsWithDefaults.toastOptions?.descriptionClass}
+                    invert={Boolean(propsWithDefaults.invert)}
+                    visibleToasts={propsWithDefaults.visibleToasts}
+                    closeButton={Boolean(propsWithDefaults.closeButton)}
+                    interacting={interacting()}
+                    position={propsWithDefaults.position}
+                    style={propsWithDefaults.toastOptions?.style}
+                    unstyled={propsWithDefaults.toastOptions?.unstyled}
+                    removeToast={removeToast}
+                    toasts={toasts()}
+                    heights={heights()}
+                    setHeights={setHeights}
+                    expandByDefault={Boolean(propsWithDefaults.expand)}
+                    gap={propsWithDefaults.gap}
+                    expanded={expanded()}
+                  />
+                )}
+              </For>
+            </ol>
+            )
           }}
-          onFocus={(event) => {
-            if (!isFocusedWithinRef()) {
-              setIsFocusedWithinRef(true)
-              setLastFocusedElementRef(event.relatedTarget as HTMLElement)
-            }
-          }}
-          onMouseEnter={() => setExpanded(true)}
-          onMouseMove={() => setExpanded(true)}
-          onMouseLeave={() => {
-            // Avoid setting expanded to false when interacting with a toast, e.g. swiping
-            if (!interacting())
-              setExpanded(false)
-          }}
-          onPointerDown={() => {
-            setInteracting(true)
-          }}
-          onPointerUp={() => setInteracting(false)}
-        >
-          <For each={toasts()}>
-            {(toast, index) => (
-              <Toast
-                index={index()}
-                toast={toast}
-                duration={propsWithDefaults.duration}
-                class={propsWithDefaults.toastOptions?.class}
-                descriptionClass={propsWithDefaults.toastOptions?.descriptionClass}
-                invert={Boolean(propsWithDefaults.invert)}
-                visibleToasts={propsWithDefaults.visibleToasts}
-                closeButton={Boolean(propsWithDefaults.closeButton)}
-                interacting={interacting()}
-                position={propsWithDefaults.position}
-                style={propsWithDefaults.toastOptions?.style}
-                removeToast={removeToast}
-                toasts={toasts()}
-                heights={heights()}
-                setHeights={setHeights}
-                expandByDefault={Boolean(propsWithDefaults.expand)}
-                expanded={expanded()}
-              />
-            )}
-          </For>
-        </ol>
+        </For>
       </section>
     </Show>
   )

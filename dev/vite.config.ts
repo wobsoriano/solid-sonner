@@ -1,4 +1,4 @@
-import path from 'node:path'
+import { URL, fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import solidPlugin from 'vite-plugin-solid'
 
@@ -24,14 +24,14 @@ export default defineConfig({
     },
   ],
   server: {
-    port: 4173,
+    port: 3000,
   },
   build: {
     target: 'esnext',
   },
   resolve: {
-    alias: {
-      src: path.resolve(__dirname, '../src'),
-    },
+    alias: [
+      { find: 'src/', replacement: fileURLToPath(new URL('../src', import.meta.url)) },
+    ],
   },
 })
