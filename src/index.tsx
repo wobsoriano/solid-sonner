@@ -387,7 +387,6 @@ const Toaster: Component<ToasterProps> = (props) => {
   const [heights, setHeights] = createSignal<HeightT[]>([])
   const [expanded, setExpanded] = createSignal(false)
   const [interacting, setInteracting] = createSignal(false)
-  const coords = createMemo(() => propsWithDefaults.position.split('-'))
   let listRef: HTMLOListElement
   const hotkeyLabel = createMemo(() => propsWithDefaults.hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, ''))
   const [lastFocusedElementRef, setLastFocusedElementRef] = createSignal<HTMLElement | null>(null)
