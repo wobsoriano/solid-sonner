@@ -58,6 +58,8 @@ export interface ToastT {
   onDismiss?: (toast: ToastT) => void
   onAutoClose?: (toast: ToastT) => void
   promise?: PromiseT
+  cancelButtonStyle?: JSX.CSSProperties
+  actionButtonStyle?: JSX.CSSProperties
   style?: JSX.CSSProperties
   unstyled?: boolean
   class?: string
@@ -74,8 +76,11 @@ export interface HeightT {
 
 interface ToastOptions {
   class?: string
+  closeButton?: boolean
   descriptionClass?: string
   style?: JSX.CSSProperties
+  cancelButtonStyle?: JSX.CSSProperties
+  actionButtonStyle?: JSX.CSSProperties
   unstyled?: boolean
   classes?: ToastClasses
 }
@@ -134,6 +139,8 @@ export interface ToastProps {
   closeButton: boolean
   interacting: boolean
   style?: JSX.CSSProperties
+  cancelButtonStyle?: JSX.CSSProperties
+  actionButtonStyle?: JSX.CSSProperties
   duration?: number
   class?: string
   unstyled?: boolean

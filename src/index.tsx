@@ -320,6 +320,7 @@ const Toast: Component<ToastProps> = (props) => {
               <button
                   data-button
                   data-cancel
+                  style={props.toast.cancelButtonStyle || props.cancelButtonStyle}
                   onClick={() => {
                     deleteToast()
                     if (props.toast.cancel?.onClick)
@@ -333,6 +334,7 @@ const Toast: Component<ToastProps> = (props) => {
             <Show when={props.toast.action}>
               <button
                   data-button=""
+                  style={props.toast.actionButtonStyle || props.actionButtonStyle}
                   onClick={(event) => {
                     props.toast.action?.onClick(event)
                     if (event.defaultPrevented)
@@ -554,6 +556,8 @@ const Toaster: Component<ToasterProps> = (props) => {
                     duration={propsWithDefaults.duration}
                     class={props.toastOptions?.class}
                     classes={propsWithDefaults.toastOptions?.classes}
+                    cancelButtonStyle={propsWithDefaults.toastOptions?.cancelButtonStyle}
+                    actionButtonStyle={propsWithDefaults.toastOptions?.actionButtonStyle}
                     descriptionClass={propsWithDefaults.toastOptions?.descriptionClass}
                     invert={Boolean(propsWithDefaults.invert)}
                     visibleToasts={propsWithDefaults.visibleToasts}
