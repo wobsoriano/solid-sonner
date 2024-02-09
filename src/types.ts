@@ -1,6 +1,6 @@
-import type { JSX } from 'solid-js'
+import type { JSX, Setter } from 'solid-js'
 
-export type ToastTypes = 'normal' | 'action' | 'success' | 'error' | 'loading'
+export type ToastTypes = 'normal' | 'action' | 'success' | 'info' | 'warning' | 'error' | 'loading' | 'default'
 
 export type PromiseT<Data = any> = Promise<Data> | (() => Promise<Data>)
 
@@ -9,6 +9,14 @@ export type PromiseData<ToastData = any> = ExternalToast & {
   success: string | JSX.Element | ((data: ToastData) => JSX.Element | string)
   error: string | JSX.Element | ((error: any) => JSX.Element | string)
   finally?: () => void | Promise<void>
+}
+
+export interface ToastIcons {
+  success?: JSX.Element
+  info?: JSX.Element
+  warning?: JSX.Element
+  error?: JSX.Element
+  loading?: JSX.Element
 }
 
 export interface ToastT {
@@ -64,6 +72,7 @@ export interface ToasterProps {
   class?: string
   style?: JSX.CSSProperties
   offset?: string | number
+  icons?: ToastIcons
 }
 
 export enum SwipeStateTypes {
@@ -84,3 +93,24 @@ export type ExternalToast = Omit<ToastT, 'id' | 'type' | 'title' | 'delete' | 'p
 }
 
 export type FixMe = any
+
+export interface ToastProps {
+  toast: ToastT
+  toasts: ToastT[]
+  index: number
+  expanded: boolean
+  invert: boolean
+  heights: HeightT[]
+  setHeights: Setter<HeightT[]>
+  removeToast: (toast: ToastT) => void
+  position: Position
+  visibleToasts: number
+  expandByDefault: boolean
+  closeButton: boolean
+  interacting: boolean
+  style?: JSX.CSSProperties
+  duration?: number
+  class?: string
+  descriptionClass?: string
+  icons?: ToastIcons
+}

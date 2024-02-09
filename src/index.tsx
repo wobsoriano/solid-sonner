@@ -6,11 +6,11 @@
  * https://github.com/emilkowalski/sonner/blob/main/src/index.tsx
  */
 import './styles.css'
-import type { Component, JSX, Setter, ValidComponent } from 'solid-js'
+import type { Component, ValidComponent } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 import { For, Show, createComputed, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
 import { Loader, getAsset } from './assets'
-import type { ExternalToast, HeightT, Position, ToastT, ToastToDismiss, ToasterProps } from './types'
+import type { ExternalToast, HeightT, Position, ToastIcons, ToastProps, ToastT, ToastToDismiss, ToasterProps } from './types'
 import { ToastState, toast } from './state'
 
 // Visible toasts amount
@@ -31,26 +31,6 @@ const GAP = 14
 const SWIPE_TRESHOLD = 20
 
 const TIME_BEFORE_UNMOUNT = 200
-
-interface ToastProps {
-  toast: ToastT
-  toasts: ToastT[]
-  index: number
-  expanded: boolean
-  invert: boolean
-  heights: HeightT[]
-  setHeights: Setter<HeightT[]>
-  removeToast: (toast: ToastT) => void
-  position: Position
-  visibleToasts: number
-  expandByDefault: boolean
-  closeButton: boolean
-  interacting: boolean
-  style?: JSX.CSSProperties
-  duration?: number
-  class?: string
-  descriptionClass?: string
-}
 
 const Toast: Component<ToastProps> = (props) => {
   const [mounted, setMounted] = createSignal(false)
@@ -86,6 +66,18 @@ const Toast: Component<ToastProps> = (props) => {
   })
   const invert = createMemo(() => props.toast.invert || props.invert)
   const disabled = createMemo(() => toastType() === 'loading')
+
+  function getLoadingIcon() {
+    if (props.icons?.loading) {
+      return (
+        <div class="loader" data-visible={toastType() === 'loading'}>
+          {props.icons.loading}
+        </div>
+      )
+    }
+
+    return <Loader visible={toastType() === 'loading'} />
+  }
 
   createComputed(() => {
     setOffset(heightIndex() * GAP + toastsHeightBefore())
@@ -281,10 +273,12 @@ const Toast: Component<ToastProps> = (props) => {
           <>
             <Show when={toastType() || props.toast.icon || props.toast.promise}>
               <div data-icon="">
-                <Show when={props.toast.promise}>
-                  <Loader visible={toastType() === 'loading'} />
+                <Show
+                  when={props.toast.promise || toastType() === 'loading'}
+                  fallback={<Dynamic component={getAsset(toastType()!)!} />}
+                >
+                  <Dynamic component={(props.toast.icon || props.icons?.loading || getLoadingIcon()) as ValidComponent} />
                 </Show>
-                <Dynamic component={(props.toast.icon || getAsset[toastType()!]) as ValidComponent} />
               </div>
             </Show>
 
@@ -499,6 +493,7 @@ const Toaster: Component<ToasterProps> = (props) => {
             {(toast, index) => (
               <Toast
                 index={index()}
+                icons={propsWithDefaults.icons}
                 toast={toast}
                 duration={propsWithDefaults.duration}
                 class={propsWithDefaults.toastOptions?.class}
