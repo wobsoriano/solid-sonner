@@ -26,6 +26,7 @@ export interface ToastT {
   icon?: JSX.Element
   jsx?: JSX.Element
   invert?: boolean
+  closeButton?: boolean
   description?: JSX.Element
   duration?: number
   delete?: boolean
