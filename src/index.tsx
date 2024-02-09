@@ -46,6 +46,10 @@ const Toast: Component<ToastProps> = (props) => {
   const toastClassname = createMemo(() => props.toast.class || '')
   const toastDescriptionClassname = createMemo(() => props.toast.descriptionClass || '')
 
+  const propsWithDefaults = mergeProps({
+    gap: GAP,
+  }, props)
+
   // Height index is used to calculate the offset as it gets updated before the toast array, which means we can calculate the new layout faster.
   const heightIndex = createMemo(() => props.heights.findIndex(height => height.toastId === props.toast.id) || 0)
   const duration = createMemo(() => props.toast.duration || props.duration || TOAST_LIFETIME)
@@ -80,7 +84,7 @@ const Toast: Component<ToastProps> = (props) => {
   }
 
   createComputed(() => {
-    setOffset(heightIndex() * GAP + toastsHeightBefore())
+    setOffset(heightIndex() * propsWithDefaults.gap + toastsHeightBefore())
   })
 
   onMount(() => {
@@ -534,6 +538,7 @@ const Toaster: Component<ToasterProps> = (props) => {
                     heights={heights()}
                     setHeights={setHeights}
                     expandByDefault={Boolean(propsWithDefaults.expand)}
+                    gap={propsWithDefaults.gap}
                     expanded={expanded()}
                   />
                 )}

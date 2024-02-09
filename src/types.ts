@@ -68,6 +68,7 @@ export interface ToasterProps {
   richColors?: boolean
   expand?: boolean
   duration?: number
+  gap?: number
   visibleToasts?: number
   closeButton?: boolean
   toastOptions?: ToastOptions
@@ -106,6 +107,7 @@ export interface ToastProps {
   heights: HeightT[]
   setHeights: Setter<HeightT[]>
   removeToast: (toast: ToastT) => void
+  gap?: number
   position: Position
   visibleToasts: number
   expandByDefault: boolean
