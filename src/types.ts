@@ -11,6 +11,22 @@ export type PromiseData<ToastData = any> = ExternalToast & {
   finally?: () => void | Promise<void>
 }
 
+export interface ToastClasses {
+  toast?: string
+  title?: string
+  description?: string
+  loader?: string
+  closeButton?: string
+  cancelButton?: string
+  actionButton?: string
+  success?: string
+  error?: string
+  info?: string
+  warning?: string
+  loading?: string
+  default?: string
+}
+
 export interface ToastIcons {
   success?: JSX.Element
   info?: JSX.Element
@@ -43,7 +59,9 @@ export interface ToastT {
   onAutoClose?: (toast: ToastT) => void
   promise?: PromiseT
   style?: JSX.CSSProperties
+  unstyled?: boolean
   class?: string
+  classes?: ToastClasses
   descriptionClass?: string
   position?: Position
 }
@@ -58,6 +76,8 @@ interface ToastOptions {
   class?: string
   descriptionClass?: string
   style?: JSX.CSSProperties
+  unstyled?: boolean
+  classes?: ToastClasses
 }
 
 export interface ToasterProps {
@@ -116,6 +136,8 @@ export interface ToastProps {
   style?: JSX.CSSProperties
   duration?: number
   class?: string
+  unstyled?: boolean
   descriptionClass?: string
+  classes?: ToastClasses
   icons?: ToastIcons
 }

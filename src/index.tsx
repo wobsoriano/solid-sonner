@@ -32,6 +32,10 @@ const SWIPE_TRESHOLD = 20
 
 const TIME_BEFORE_UNMOUNT = 200
 
+function _cn(...classes: (string | undefined)[]) {
+  return classes.filter(Boolean).join(' ')
+}
+
 const Toast: Component<ToastProps> = (props) => {
   const [mounted, setMounted] = createSignal(false)
   const [removed, setRemoved] = createSignal(false)
@@ -74,7 +78,7 @@ const Toast: Component<ToastProps> = (props) => {
   function getLoadingIcon() {
     if (props.icons?.loading) {
       return (
-        <div class="loader" data-visible={toastType() === 'loading'}>
+        <div class="sonner-loader" data-visible={toastType() === 'loading'}>
           {props.icons.loading}
         </div>
       )
@@ -162,9 +166,17 @@ const Toast: Component<ToastProps> = (props) => {
       role="status"
       tabIndex={0}
       ref={toastRef!}
-      class={`${props.class} ${toastClassname()}`}
+      class={_cn(
+        props.class,
+        toastClassname(),
+        props.classes?.toast,
+        props.toast?.classes?.toast,
+        props.classes?.default,
+        props.classes?.[toastType() as keyof typeof props.classes],
+        props.toast?.classes?.[toastType() as keyof typeof props.classes],
+      )}
       data-sonner-toast=""
-      data-styled={!props.toast.jsx}
+      data-styled={!(props.toast.jsx || props.toast.unstyled || props.unstyled)}
       data-mounted={mounted()}
       data-promise={Boolean(props.toast.promise)}
       data-removed={removed()}
@@ -254,6 +266,7 @@ const Toast: Component<ToastProps> = (props) => {
                     props.toast.onDismiss?.(props.toast)
                   }
             }
+            class={_cn(props.classes?.closeButton, props.toast?.classes?.closeButton)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -287,9 +300,17 @@ const Toast: Component<ToastProps> = (props) => {
             </Show>
 
             <div data-content="">
-              <div data-title="">{props.toast.title}</div>
+              <div data-title="" class={_cn(props.classes?.title, props.toast?.classes?.title)}>{props.toast.title}</div>
               <Show when={props.toast.description}>
-                <div data-description="" class={props.descriptionClass + toastDescriptionClassname()}>
+                <div
+                  data-description=""
+                  class={_cn(
+                    props.descriptionClass,
+                    toastDescriptionClassname(),
+                    props.classes?.description,
+                    props.toast?.classes?.description,
+                  )}
+                >
                   {props.toast.description}
                 </div>
               </Show>
@@ -303,6 +324,7 @@ const Toast: Component<ToastProps> = (props) => {
                     if (props.toast.cancel?.onClick)
                       props.toast.cancel.onClick()
                   }}
+                  class={_cn(props.classes?.cancelButton, props.toast?.classes?.cancelButton)}
                 >
                   {props.toast.cancel!.label}
                 </button>
@@ -316,6 +338,7 @@ const Toast: Component<ToastProps> = (props) => {
                       return
                     deleteToast()
                   }}
+                  class={_cn(props.classes?.actionButton, props.toast?.classes?.actionButton)}
                 >
                   {props.toast.action!.label}
                 </button>
@@ -525,7 +548,8 @@ const Toaster: Component<ToasterProps> = (props) => {
                     icons={propsWithDefaults.icons}
                     toast={toast}
                     duration={propsWithDefaults.duration}
-                    class={propsWithDefaults.toastOptions?.class}
+                    class={props.toastOptions?.class}
+                    classes={propsWithDefaults.toastOptions?.classes}
                     descriptionClass={propsWithDefaults.toastOptions?.descriptionClass}
                     invert={Boolean(propsWithDefaults.invert)}
                     visibleToasts={propsWithDefaults.visibleToasts}
@@ -533,6 +557,7 @@ const Toaster: Component<ToasterProps> = (props) => {
                     interacting={interacting()}
                     position={propsWithDefaults.position}
                     style={propsWithDefaults.toastOptions?.style}
+                    unstyled={propsWithDefaults.toastOptions?.unstyled}
                     removeToast={removeToast}
                     toasts={toasts()}
                     heights={heights()}
