@@ -59,7 +59,6 @@ const Toast: Component<ToastProps> = (props) => {
   const duration = createMemo(() => props.toast.duration || props.duration || TOAST_LIFETIME)
   const [offset, setOffset] = createSignal(0)
   const [closeTimerStartTimeRef, setCloseTimerStartTimeRef] = createSignal(0)
-  const [closeTimerRemainingTimeRef, setCloseTimerRemainingTimeRef] = createSignal(duration())
   const [lastCloseTimerStartTimeRef, setLastCloseTimerStartTimeRef] = createSignal(0)
   const [pointerStartRef, setPointerStartRef] = createSignal<{ x: number; y: number } | null>(null)
   const coords = createMemo(() => props.position.split('-'))
@@ -110,6 +109,7 @@ const Toast: Component<ToastProps> = (props) => {
     if ((props.toast.promise && toastType() === 'loading') || props.toast.duration === Number.POSITIVE_INFINITY)
       return
     let timeoutId: ReturnType<typeof setTimeout>
+    let remainingTime = duration()
 
     // Pause the timer on each hover
     const pauseTimer = () => {
@@ -117,7 +117,7 @@ const Toast: Component<ToastProps> = (props) => {
         // Get the elapsed time since the timer started
         const elapsedTime = new Date().getTime() - closeTimerStartTimeRef()
 
-        setCloseTimerRemainingTimeRef(prev => prev - elapsedTime)
+        remainingTime = remainingTime - elapsedTime
       }
 
       setLastCloseTimerStartTimeRef(new Date().getTime())
@@ -129,7 +129,7 @@ const Toast: Component<ToastProps> = (props) => {
       timeoutId = setTimeout(() => {
         props.toast.onAutoClose?.(props.toast)
         deleteToast()
-      }, closeTimerRemainingTimeRef())
+      }, remainingTime)
     }
 
     if (props.expanded || props.interacting)
