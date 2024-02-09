@@ -492,7 +492,7 @@ const Toaster: Component<ToasterProps> = (props) => {
       {/* Remove item from normal navigation flow, only available via hotkey */}
       <section aria-label={`Notifications ${hotkeyLabel()}`} tabIndex={-1}>
         <For each={possiblePositions()}>
-          {(position) => {
+          {(position, index) => {
             const [y, x] = position.split('-')
             return (
               <ol
@@ -541,7 +541,10 @@ const Toaster: Component<ToasterProps> = (props) => {
               }}
               onPointerUp={() => setInteracting(false)}
             >
-              <For each={toasts()}>
+              <For each={
+                toasts()
+                  .filter(toast => (!toast.position && index() === 0) || toast.position === position)
+              }>
                 {(toast, index) => (
                   <Toast
                     index={index()}
