@@ -10,7 +10,7 @@ import type { Component, ValidComponent } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 import { For, Show, createComputed, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
 import { Loader, getAsset } from './assets'
-import type { ExternalToast, HeightT, Position, ToastIcons, ToastProps, ToastT, ToastToDismiss, ToasterProps } from './types'
+import type { ExternalToast, HeightT, Position, ToastProps, ToastT, ToastToDismiss, ToasterProps } from './types'
 import { ToastState, toast } from './state'
 
 // Visible toasts amount
@@ -349,6 +349,11 @@ const Toaster: Component<ToasterProps> = (props) => {
   }, props) as ToasterProps & { position: Position; hotkey: string[]; visibleToasts: number }
 
   const [toasts, setToasts] = createSignal<ToastT[]>([])
+  const possiblePositions = createMemo(() => {
+    return Array.from(
+      new Set([propsWithDefaults.position].concat(toasts().filter(toast => toast.position).map(toast => toast.position as Position))),
+    )
+  })
   const [heights, setHeights] = createSignal<HeightT[]>([])
   const [expanded, setExpanded] = createSignal(false)
   const [interacting, setInteracting] = createSignal(false)
@@ -459,77 +464,84 @@ const Toaster: Component<ToasterProps> = (props) => {
     <Show when={toasts().length > 0}>
       {/* Remove item from normal navigation flow, only available via hotkey */}
       <section aria-label={`Notifications ${hotkeyLabel()}`} tabIndex={-1}>
-        <ol
-          tabIndex={-1}
-          ref={listRef!}
-          dir={propsWithDefaults.dir === 'auto' ? getDocumentDirection() : propsWithDefaults.dir}
-          class={propsWithDefaults.class}
-          data-sonner-toaster
-          data-theme={actualTheme()}
-          data-rich-colors={propsWithDefaults.richColors}
-          data-y-position={coords()[0]}
-          data-x-position={coords()[1]}
-          style={
-            {
-              '--front-toast-height': `${heights()[0]?.height}px`,
-              '--offset': typeof propsWithDefaults.offset === 'number' ? `${propsWithDefaults.offset}px` : propsWithDefaults.offset || VIEWPORT_OFFSET,
-              '--width': `${TOAST_WIDTH}px`,
-              '--gap': `${GAP}px`,
-              ...propsWithDefaults.style,
-            }
-          }
-          onBlur={(event) => {
-            if (isFocusedWithinRef() && !event.currentTarget.contains(event.relatedTarget as HTMLElement)) {
-              setIsFocusedWithinRef(false)
-              if (lastFocusedElementRef()) {
-                lastFocusedElementRef()?.focus({ preventScroll: true })
-                setLastFocusedElementRef(null)
+        <For each={possiblePositions()}>
+          {(position) => {
+            const [y, x] = position.split('-')
+            return (
+              <ol
+              tabIndex={-1}
+              ref={listRef!}
+              dir={propsWithDefaults.dir === 'auto' ? getDocumentDirection() : propsWithDefaults.dir}
+              class={propsWithDefaults.class}
+              data-sonner-toaster
+              data-theme={actualTheme()}
+              data-rich-colors={propsWithDefaults.richColors}
+              data-y-position={y}
+              data-x-position={x}
+              style={
+                {
+                  '--front-toast-height': `${heights()[0]?.height}px`,
+                  '--offset': typeof propsWithDefaults.offset === 'number' ? `${propsWithDefaults.offset}px` : propsWithDefaults.offset || VIEWPORT_OFFSET,
+                  '--width': `${TOAST_WIDTH}px`,
+                  '--gap': `${GAP}px`,
+                  ...propsWithDefaults.style,
+                }
               }
-            }
+              onBlur={(event) => {
+                if (isFocusedWithinRef() && !event.currentTarget.contains(event.relatedTarget as HTMLElement)) {
+                  setIsFocusedWithinRef(false)
+                  if (lastFocusedElementRef()) {
+                    lastFocusedElementRef()?.focus({ preventScroll: true })
+                    setLastFocusedElementRef(null)
+                  }
+                }
+              }}
+              onFocus={(event) => {
+                if (!isFocusedWithinRef()) {
+                  setIsFocusedWithinRef(true)
+                  setLastFocusedElementRef(event.relatedTarget as HTMLElement)
+                }
+              }}
+              onMouseEnter={() => setExpanded(true)}
+              onMouseMove={() => setExpanded(true)}
+              onMouseLeave={() => {
+                // Avoid setting expanded to false when interacting with a toast, e.g. swiping
+                if (!interacting())
+                  setExpanded(false)
+              }}
+              onPointerDown={() => {
+                setInteracting(true)
+              }}
+              onPointerUp={() => setInteracting(false)}
+            >
+              <For each={toasts()}>
+                {(toast, index) => (
+                  <Toast
+                    index={index()}
+                    icons={propsWithDefaults.icons}
+                    toast={toast}
+                    duration={propsWithDefaults.duration}
+                    class={propsWithDefaults.toastOptions?.class}
+                    descriptionClass={propsWithDefaults.toastOptions?.descriptionClass}
+                    invert={Boolean(propsWithDefaults.invert)}
+                    visibleToasts={propsWithDefaults.visibleToasts}
+                    closeButton={Boolean(propsWithDefaults.closeButton)}
+                    interacting={interacting()}
+                    position={propsWithDefaults.position}
+                    style={propsWithDefaults.toastOptions?.style}
+                    removeToast={removeToast}
+                    toasts={toasts()}
+                    heights={heights()}
+                    setHeights={setHeights}
+                    expandByDefault={Boolean(propsWithDefaults.expand)}
+                    expanded={expanded()}
+                  />
+                )}
+              </For>
+            </ol>
+            )
           }}
-          onFocus={(event) => {
-            if (!isFocusedWithinRef()) {
-              setIsFocusedWithinRef(true)
-              setLastFocusedElementRef(event.relatedTarget as HTMLElement)
-            }
-          }}
-          onMouseEnter={() => setExpanded(true)}
-          onMouseMove={() => setExpanded(true)}
-          onMouseLeave={() => {
-            // Avoid setting expanded to false when interacting with a toast, e.g. swiping
-            if (!interacting())
-              setExpanded(false)
-          }}
-          onPointerDown={() => {
-            setInteracting(true)
-          }}
-          onPointerUp={() => setInteracting(false)}
-        >
-          <For each={toasts()}>
-            {(toast, index) => (
-              <Toast
-                index={index()}
-                icons={propsWithDefaults.icons}
-                toast={toast}
-                duration={propsWithDefaults.duration}
-                class={propsWithDefaults.toastOptions?.class}
-                descriptionClass={propsWithDefaults.toastOptions?.descriptionClass}
-                invert={Boolean(propsWithDefaults.invert)}
-                visibleToasts={propsWithDefaults.visibleToasts}
-                closeButton={Boolean(propsWithDefaults.closeButton)}
-                interacting={interacting()}
-                position={propsWithDefaults.position}
-                style={propsWithDefaults.toastOptions?.style}
-                removeToast={removeToast}
-                toasts={toasts()}
-                heights={heights()}
-                setHeights={setHeights}
-                expandByDefault={Boolean(propsWithDefaults.expand)}
-                expanded={expanded()}
-              />
-            )}
-          </For>
-        </ol>
+        </For>
       </section>
     </Show>
   )
