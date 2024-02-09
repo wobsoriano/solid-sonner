@@ -325,12 +325,27 @@ const Toast: Component<ToastProps> = (props) => {
   )
 }
 
+function getDocumentDirection(): ToasterProps['dir'] {
+  if (typeof window === 'undefined')
+    return 'ltr'
+  if (typeof document === 'undefined')
+    return 'ltr' // For Fresh purpose
+
+  const dirAttribute = document.documentElement.getAttribute('dir')
+
+  if (dirAttribute === 'auto' || !dirAttribute)
+    return window.getComputedStyle(document.documentElement).direction as ToasterProps['dir']
+
+  return dirAttribute as ToasterProps['dir']
+}
+
 const Toaster: Component<ToasterProps> = (props) => {
   const propsWithDefaults = mergeProps({
     position: 'bottom-right',
     hotkey: ['altKey', 'KeyT'],
     theme: 'light',
     visibleToasts: VISIBLE_TOASTS_AMOUNT,
+    dir: getDocumentDirection(),
   }, props) as ToasterProps & { position: Position; hotkey: string[]; visibleToasts: number }
 
   const [toasts, setToasts] = createSignal<ToastT[]>([])
@@ -447,6 +462,7 @@ const Toaster: Component<ToasterProps> = (props) => {
         <ol
           tabIndex={-1}
           ref={listRef!}
+          dir={propsWithDefaults.dir === 'auto' ? getDocumentDirection() : propsWithDefaults.dir}
           class={propsWithDefaults.class}
           data-sonner-toaster
           data-theme={actualTheme()}

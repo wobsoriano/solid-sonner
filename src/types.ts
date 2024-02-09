@@ -73,6 +73,7 @@ export interface ToasterProps {
   style?: JSX.CSSProperties
   offset?: string | number
   icons?: ToastIcons
+  dir?: 'rtl' | 'ltr' | 'auto'
 }
 
 export enum SwipeStateTypes {
