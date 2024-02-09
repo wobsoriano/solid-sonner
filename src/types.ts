@@ -81,6 +81,7 @@ interface ToastOptions {
   style?: JSX.CSSProperties
   cancelButtonStyle?: JSX.CSSProperties
   actionButtonStyle?: JSX.CSSProperties
+  duration?: number
   unstyled?: boolean
   classes?: ToastClasses
 }

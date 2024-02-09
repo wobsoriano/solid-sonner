@@ -553,8 +553,8 @@ const Toaster: Component<ToasterProps> = (props) => {
                     index={index()}
                     icons={propsWithDefaults.icons}
                     toast={toast}
-                    duration={propsWithDefaults.duration}
-                    class={props.toastOptions?.class}
+                    duration={propsWithDefaults.toastOptions?.duration ?? props.duration}
+                    class={propsWithDefaults.toastOptions?.class}
                     classes={propsWithDefaults.toastOptions?.classes}
                     cancelButtonStyle={propsWithDefaults.toastOptions?.cancelButtonStyle}
                     actionButtonStyle={propsWithDefaults.toastOptions?.actionButtonStyle}
