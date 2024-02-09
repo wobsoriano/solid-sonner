@@ -27,6 +27,16 @@ const allTypes = [
     action: () => toast.success('Event has been created'),
   },
   {
+    name: 'Info',
+    snippet: 'toast.info(\'Event will be created\')',
+    action: () => toast.info('Event will be created'),
+  },
+  {
+    name: 'Warning',
+    snippet: 'toast.warning(\'Event has warnings\')',
+    action: () => toast.warning('Event has warnings'),
+  },
+  {
     name: 'Error',
     snippet: 'toast.error(\'Event has not been created\')',
     action: () => toast.error('Event has not been created'),
