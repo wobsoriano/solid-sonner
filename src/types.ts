@@ -103,6 +103,7 @@ export interface ToasterProps {
   offset?: string | number
   icons?: ToastIcons
   dir?: 'rtl' | 'ltr' | 'auto'
+  pauseWhenPageIsHidden?: boolean
 }
 
 export enum SwipeStateTypes {
@@ -148,4 +149,5 @@ export interface ToastProps {
   descriptionClass?: string
   classes?: ToastClasses
   icons?: ToastIcons
+  pauseWhenPageIsHidden?: boolean
 }

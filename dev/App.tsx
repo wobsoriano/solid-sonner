@@ -18,7 +18,7 @@ export default function Home() {
 
   return (
     <>
-      <Toaster richColors={richColors()} closeButton={closeButton()} expand={expand()} position={position()} />
+      <Toaster richColors={richColors()} closeButton={closeButton()} expand={expand()} position={position()} pauseWhenPageIsHidden={true} />
       <main class="container">
         <Hero />
         <div class="content">
