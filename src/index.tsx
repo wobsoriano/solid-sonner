@@ -12,6 +12,7 @@ import { For, Show, createEffect, createSignal, mergeProps, on, onCleanup, onMou
 import { Loader, getAsset } from './assets'
 import type { ExternalToast, HeightT, Position, ToastProps, ToastT, ToastToDismiss, ToasterProps } from './types'
 import { ToastState, toast } from './state'
+import { useIsDocumentHidden } from './primitives'
 
 // Visible toasts amount
 const VISIBLE_TOASTS_AMOUNT = 3
@@ -70,6 +71,7 @@ const Toast: Component<ToastProps> = (props) => {
       return prev + curr.height
     }, 0)
   }
+  const isDocumentHidden = useIsDocumentHidden()
   const invert = () => props.toast.invert || props.invert
   const disabled = () => toastType() === 'loading'
 
@@ -134,8 +136,10 @@ const Toast: Component<ToastProps> = (props) => {
         duration(),
         props.toast.promise,
         toastType(),
+        props.pauseWhenPageIsHidden,
+        isDocumentHidden(),
       ] as const,
-      ([expanded, interacting, toast, duration, promise, toastType]) => {
+      ([expanded, interacting, toast, duration, promise, toastType, pauseWhenPageIsHidden, isDocumentHidden]) => {
         if ((promise && toastType === 'loading') || duration === Number.POSITIVE_INFINITY)
           return
         let timeoutId: ReturnType<typeof setTimeout>
@@ -162,7 +166,7 @@ const Toast: Component<ToastProps> = (props) => {
           }, remainingTime)
         }
 
-        if (expanded || interacting)
+        if (expanded || interacting || (pauseWhenPageIsHidden && isDocumentHidden))
           pauseTimer()
         else
           startTimer()
@@ -627,6 +631,7 @@ const Toaster: Component<ToasterProps> = (props) => {
                     expandByDefault={Boolean(propsWithDefaults.expand)}
                     gap={propsWithDefaults.gap}
                     expanded={expanded()}
+                    pauseWhenPageIsHidden={propsWithDefaults.pauseWhenPageIsHidden}
                   />
                 )}
               </For>
