@@ -341,10 +341,10 @@ const Toast: Component<ToastProps> = (props) => {
             <Show when={toastType() || props.toast.icon || props.toast.promise}>
               <div data-icon="">
                 <Show
-                  when={props.toast.promise || toastType() === 'loading'}
+                  when={props.toast.icon || props.toast.promise || toastType() === 'loading'}
                   fallback={<Dynamic component={getAsset(toastType()!)!} />}
                 >
-                  <Dynamic component={(props.toast.icon || props.icons?.loading || getLoadingIcon()) as ValidComponent} />
+                  <Dynamic component={((props.toast.icon && (() => props.toast.icon)) || props.icons?.loading || getLoadingIcon()) as ValidComponent} />
                 </Show>
               </div>
             </Show>
