@@ -62,21 +62,20 @@
     "@antfu/eslint-config-ts": "^0.43.1",
     "@playwright/test": "^1.41.2",
     "@types/node": "^20.11.17",
-    "bumpp": "^9.3.0",
-    "concurrently": "^8.2.2",
+    "bumpp": "^9.4.0",
     "copy-to-clipboard": "^3.3.3",
     "esbuild": "^0.20.0",
     "esbuild-plugin-solid": "^0.5.0",
     "eslint": "^8.56.0",
-    "eslint-plugin-solid": "^0.13.1",
+    "eslint-plugin-solid": "^0.13.2",
     "highlight.js": "^11.9.0",
     "jsdom": "^24.0.0",
-    "solid-js": "^1.8.14",
-    "tsup": "^8.0.1",
+    "solid-js": "^1.8.16",
+    "tsup": "^8.0.2",
     "tsup-preset-solid": "^2.2.0",
     "typescript": "^5.3.3",
-    "vite": "^5.1.1",
-    "vite-plugin-solid": "^2.9.1"
+    "vite": "^5.2.8",
+    "vite-plugin-solid": "^2.10.2"
   },
   "eslintConfig": {
     "plugins": [
