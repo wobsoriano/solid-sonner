@@ -143,7 +143,11 @@ class Observer {
     return id
   }
 
-  // We can't provide the toast we just created as a prop as we didn't creat it yet, so we can create a default toast object, I just don't know how to use function in argument when calling()?
+  loading = (message: string | JSX.Element, data?: ExternalToast) => {
+    return this.create({ ...data, type: 'loading', message })
+  }
+
+  // We can't provide the toast we just created as a prop as we didn't create it yet, so we can create a default toast object, I just don't know how to use function in argument when calling()?
   custom = (jsx: (id: number | string) => JSX.Element, data?: ExternalToast) => {
     const id = data?.id || toastsCounter++
     this.publish({ jsx: jsx(id), id, ...data })
@@ -177,4 +181,5 @@ export const toast = Object.assign(basicToast, {
   message: ToastState.message,
   promise: ToastState.promise,
   dismiss: ToastState.dismiss,
+  loading: ToastState.loading,
 })
