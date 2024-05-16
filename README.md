@@ -127,6 +127,14 @@ toast.promise(promise, {
 })
 ```
 
+### Loading
+
+Renders a toast with a loading spinner. Useful when you want to handle various states yourself instead of using a promise toast.
+
+```jsx
+toast.loading('Loading data')
+```
+
 ### Custom JSX
 
 You can pass jsx as the first argument instead of a string to render custom jsx while maintaining default styling. You can use the headless version below for a custom, unstyled toast.
