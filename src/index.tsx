@@ -7,8 +7,8 @@
  */
 import './styles.css'
 import type { Component, ValidComponent } from 'solid-js'
-import { Dynamic } from 'solid-js/web'
 import { For, Show, createEffect, createSignal, mergeProps, on, onCleanup, onMount } from 'solid-js'
+import { createStore, produce, reconcile } from 'solid-js/store'
 import { Loader, getAsset } from './assets'
 import type { ExternalToast, HeightT, Position, ToastProps, ToastT, ToastToDismiss, ToasterProps } from './types'
 import { ToastState, toast } from './state'
@@ -340,12 +340,9 @@ const Toast: Component<ToastProps> = (props) => {
           <>
             <Show when={toastType() || props.toast.icon || props.toast.promise}>
               <div data-icon="">
-                <Show
-                  when={props.toast.icon || props.toast.promise || toastType() === 'loading'}
-                  fallback={<Dynamic component={getAsset(toastType()!)!} />}
-                >
-                  <Dynamic component={((props.toast.icon && (() => props.toast.icon)) || props.icons?.loading || getLoadingIcon()) as ValidComponent} />
-                </Show>
+                {props.toast.promise || (props.toast.type === 'loading' && !props.toast.icon) ? props.toast.icon || getLoadingIcon() : null}
+                {/* @ts-expect-error Some icons don't display when toast type updates existing toasts. TODO: Can be improved to be written in the "solid-way". This removes the bug. */}
+                {props.toast.type !== 'loading' ? props.toast.icon || props.icons?.[toastType() as unknown as keyof typeof props.icons] || getAsset(toastType()!)! : null}
               </div>
             </Show>
 
@@ -427,10 +424,16 @@ const Toaster: Component<ToasterProps> = (props) => {
     dir: getDocumentDirection(),
   }, props) as ToasterProps & { position: Position; hotkey: string[]; visibleToasts: number }
 
-  const [toasts, setToasts] = createSignal<ToastT[]>([])
+  /**
+   * Use a store instead of a signal for fine-grained reactivity.
+   * All the setters only have to change the deepest part of the tree
+   * to maintain referential integrity when rendered in the DOM.
+   */
+  const [toastsStore, setToastsStore] = createStore<{ toasts: ToastT[] }>({ toasts: [] })
+
   const possiblePositions = () => {
     return Array.from(
-      new Set([propsWithDefaults.position].concat(toasts().filter(toast => toast.position).map(toast => toast.position as Position))),
+      new Set([propsWithDefaults.position].concat(toastsStore.toasts.filter(toast => toast.position).map(toast => toast.position as Position))),
     )
   }
   const [heights, setHeights] = createSignal<HeightT[]>([])
@@ -449,29 +452,31 @@ const Toaster: Component<ToasterProps> = (props) => {
           : 'light'
         : 'light',
   )
-  const removeToast = (toast: ToastT) => setToasts(toasts => toasts.filter(({ id }) => id !== toast.id))
+  const removeToast = (toast: ToastT) => setToastsStore('toasts', toasts => toasts.filter(({ id }) => id !== toast.id))
 
   onMount(() => {
     const unsub = ToastState.subscribe((toast) => {
       if ((toast as ToastToDismiss).dismiss) {
-        setToasts(toasts => toasts.map(t => (t.id === toast.id ? { ...t, delete: true } : t)))
+        setToastsStore('toasts', produce((_toasts) => {
+          _toasts.forEach((t) => {
+            if (t.id === toast.id)
+              t.delete = true
+          })
+        }))
         return
       }
 
-      setToasts((toasts) => {
-        const indexOfExistingToast = toasts.findIndex(t => t.id === toast.id)
+      // Update (Fine-grained)
+      const changedIndex = toastsStore.toasts.findIndex(t => t.id === toast.id)
+      if (changedIndex !== -1) {
+        setToastsStore('toasts', [changedIndex], reconcile(toast))
+        return
+      }
 
-        // Update the toast if it already exists
-        if (indexOfExistingToast !== -1) {
-          return [
-            ...toasts.slice(0, indexOfExistingToast),
-            { ...toasts[indexOfExistingToast], ...toast },
-            ...toasts.slice(indexOfExistingToast + 1),
-          ]
-        }
-
-        return [toast, ...toasts]
-      })
+      // Insert (Fine-grained)
+      setToastsStore('toasts', produce((_toasts) => {
+        _toasts.unshift(toast)
+      }))
     })
 
     onCleanup(() => {
@@ -504,7 +509,7 @@ const Toaster: Component<ToasterProps> = (props) => {
 
   createEffect(() => {
     // Ensure expanded is always false when no toasts are present / only one left
-    if (toasts().length <= 1)
+    if (toastsStore.toasts.length <= 1)
       setExpanded(false)
   })
 
@@ -549,7 +554,7 @@ const Toaster: Component<ToasterProps> = (props) => {
   )
 
   return (
-    <Show when={toasts().length > 0}>
+    <Show when={toastsStore.toasts.length > 0}>
       {/* Remove item from normal navigation flow, only available via hotkey */}
       <section aria-label={`Notifications ${hotkeyLabel()}`} tabIndex={-1}>
         <For each={possiblePositions()}>
@@ -603,36 +608,34 @@ const Toaster: Component<ToasterProps> = (props) => {
               onPointerUp={() => setInteracting(false)}
             >
               <For each={
-                toasts()
-                  .filter(toast => (!toast.position && index() === 0) || toast.position === position)
-              }>
+                toastsStore.toasts.filter(toast => (!toast.position && index() === 0) || toast.position === position)}>
                 {(toast, index) => (
-                  <Toast
-                    index={index()}
-                    icons={propsWithDefaults.icons}
-                    toast={toast}
-                    duration={propsWithDefaults.toastOptions?.duration ?? props.duration}
-                    class={propsWithDefaults.toastOptions?.class}
-                    classes={propsWithDefaults.toastOptions?.classes}
-                    cancelButtonStyle={propsWithDefaults.toastOptions?.cancelButtonStyle}
-                    actionButtonStyle={propsWithDefaults.toastOptions?.actionButtonStyle}
-                    descriptionClass={propsWithDefaults.toastOptions?.descriptionClass}
-                    invert={Boolean(propsWithDefaults.invert)}
-                    visibleToasts={propsWithDefaults.visibleToasts}
-                    closeButton={Boolean(propsWithDefaults.closeButton)}
-                    interacting={interacting()}
-                    position={propsWithDefaults.position}
-                    style={propsWithDefaults.toastOptions?.style}
-                    unstyled={propsWithDefaults.toastOptions?.unstyled}
-                    removeToast={removeToast}
-                    toasts={toasts()}
-                    heights={heights()}
-                    setHeights={setHeights}
-                    expandByDefault={Boolean(propsWithDefaults.expand)}
-                    gap={propsWithDefaults.gap}
-                    expanded={expanded()}
-                    pauseWhenPageIsHidden={propsWithDefaults.pauseWhenPageIsHidden}
-                  />
+                    <Toast
+                      index={index()}
+                      icons={propsWithDefaults.icons}
+                      toast={toast}
+                      duration={propsWithDefaults.toastOptions?.duration ?? props.duration}
+                      class={propsWithDefaults.toastOptions?.class}
+                      classes={propsWithDefaults.toastOptions?.classes}
+                      cancelButtonStyle={propsWithDefaults.toastOptions?.cancelButtonStyle}
+                      actionButtonStyle={propsWithDefaults.toastOptions?.actionButtonStyle}
+                      descriptionClass={propsWithDefaults.toastOptions?.descriptionClass}
+                      invert={Boolean(propsWithDefaults.invert)}
+                      visibleToasts={propsWithDefaults.visibleToasts}
+                      closeButton={Boolean(propsWithDefaults.closeButton)}
+                      interacting={interacting()}
+                      position={propsWithDefaults.position}
+                      style={propsWithDefaults.toastOptions?.style}
+                      unstyled={propsWithDefaults.toastOptions?.unstyled}
+                      removeToast={removeToast}
+                      toasts={toastsStore.toasts}
+                      heights={heights()}
+                      setHeights={setHeights}
+                      expandByDefault={Boolean(propsWithDefaults.expand)}
+                      gap={propsWithDefaults.gap}
+                      expanded={expanded()}
+                      pauseWhenPageIsHidden={propsWithDefaults.pauseWhenPageIsHidden}
+                    />
                 )}
               </For>
             </ol>

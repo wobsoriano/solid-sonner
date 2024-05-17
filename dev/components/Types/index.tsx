@@ -72,8 +72,11 @@ toast.promise(promise, {
     action: () =>
       toast.promise<{ name: string }>(
         () =>
-          new Promise((resolve) => {
+          new Promise((resolve, reject) => {
             setTimeout(() => {
+              const random50Percent = Math.floor(Math.random() * 2)
+              if (random50Percent > 0)
+                reject(new Error('Something\'s not right!'))
               resolve({ name: 'Solid Sonner' })
             }, 1500)
           }),
@@ -85,6 +88,31 @@ toast.promise(promise, {
           error: 'Error',
         },
       ),
+  },
+  {
+    name: 'Loading',
+    snippet: `const promise = () => new Promise((resolve) => setTimeout(resolve, 800));
+
+toast.loading('Uploading...', { id: 'form' });
+await promise();
+toast.loading('Saving...', { id: 'form'});
+await promise();
+toast.success('Success!', { id: 'form' });
+`,
+    action: async () => {
+      const idAlphabet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+      const getRandomIndex = () => Math.floor(Math.random() * idAlphabet.length)
+      const toastId = idAlphabet[getRandomIndex()]! + idAlphabet[getRandomIndex()]! + idAlphabet[getRandomIndex()]!
+
+      const promise = () => new Promise((resolve) => {
+        setTimeout(resolve, 1000)
+      })
+      toast.loading('Uploading...', { id: toastId })
+      await promise()
+      toast.loading('Saving...', { id: toastId })
+      await promise()
+      toast.success('Success!', { id: toastId })
+    },
   },
   {
     name: 'Custom',
