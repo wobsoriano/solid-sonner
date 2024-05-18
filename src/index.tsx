@@ -341,8 +341,7 @@ const Toast: Component<ToastProps> = (props) => {
             <Show when={toastType() || props.toast.icon || props.toast.promise}>
               <div data-icon="">
                 {props.toast.promise || (props.toast.type === 'loading' && !props.toast.icon) ? props.toast.icon || getLoadingIcon() : null}
-                {/* @ts-expect-error Some icons don't display when toast type updates existing toasts. TODO: Can be improved to be written in the "solid-way". This removes the bug. */}
-                {props.toast.type !== 'loading' ? props.toast.icon || props.icons?.[toastType() as unknown as keyof typeof props.icons] || getAsset(toastType()!)! : null}
+                {props.toast.type !== 'loading' ? props.toast.icon || props.icons?.[toastType() as unknown as keyof typeof props.icons] || getAsset(toastType()!)!() : null}
               </div>
             </Show>
 
