@@ -6,7 +6,7 @@
  * https://github.com/emilkowalski/sonner/blob/main/src/index.tsx
  */
 import './styles.css'
-import type { Component, ValidComponent } from 'solid-js'
+import type { Component } from 'solid-js'
 import { For, Show, createEffect, createSignal, mergeProps, on, onCleanup, onMount } from 'solid-js'
 import { createStore, produce, reconcile } from 'solid-js/store'
 import { Loader, getAsset } from './assets'
