@@ -5,7 +5,7 @@ let toastsCounter = 0
 
 class Observer {
   subscribers: Array<(toast: ExternalToast | ToastToDismiss) => void>
-  toasts: Array<ToastT | ToastToDismiss>
+  toasts: ToastT[]
 
   constructor() {
     this.subscribers = []
@@ -36,12 +36,12 @@ class Observer {
     const id = typeof data?.id === 'number' || (data.id && data.id?.length > 0) ? data.id : toastsCounter++
 
     const alreadyExists = this.toasts.find((toast) => {
-      return toast.id === id
+      return toast.id === id && toast.toasterId === data.toasterId
     })
 
     if (alreadyExists) {
       this.toasts = this.toasts.map((toast) => {
-        if (toast.id === id) {
+        if (toast.id === id && toast.toasterId === data.toasterId) {
           this.publish({ ...toast, ...data, id, title: message })
           return { ...toast, ...data, id, title: message }
         }
@@ -61,6 +61,7 @@ class Observer {
       this.toasts.forEach((toast) => {
         this.subscribers.forEach(subscriber => subscriber({ id: toast.id, dismiss: true }))
       })
+      return id
     }
 
     this.subscribers.forEach(subscriber => subscriber({ id, dismiss: true }))
@@ -150,7 +151,7 @@ class Observer {
   // We can't provide the toast we just created as a prop as we didn't create it yet, so we can create a default toast object, I just don't know how to use function in argument when calling()?
   custom = (jsx: (id: number | string) => JSX.Element, data?: ExternalToast) => {
     const id = data?.id || toastsCounter++
-    this.publish({ jsx: jsx(id), id, ...data })
+    this.create({ jsx: jsx(id), ...data, id })
     return id
   }
 }
