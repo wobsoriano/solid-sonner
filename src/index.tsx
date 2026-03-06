@@ -7,7 +7,7 @@
  */
 import './styles.css'
 import type { Component } from 'solid-js'
-import { For, Show, createEffect, createSignal, mergeProps, on, onCleanup, onMount } from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal, mergeProps, on, onCleanup, onMount } from 'solid-js'
 import { createStore, produce, reconcile } from 'solid-js/store'
 import { Loader, getAsset } from './assets'
 import type { ExternalToast, HeightT, Position, ToastProps, ToastT, ToastToDismiss, ToasterProps } from './types'
@@ -55,8 +55,12 @@ const Toast: Component<ToastProps> = (props) => {
     gap: GAP,
   }, props)
 
+  const isSameToast = (height: HeightT) => {
+    return height.toastId === props.toast.id && height.toasterId === props.toast.toasterId
+  }
+
   // Height index is used to calculate the offset as it gets updated before the toast array, which means we can calculate the new layout faster.
-  const heightIndex = () => props.heights.findIndex(height => height.toastId === props.toast.id) || 0
+  const heightIndex = () => Math.max(0, props.heights.findIndex(height => isSameToast(height)))
   const duration = () => props.toast.duration || props.duration || TOAST_LIFETIME
   let closeTimerStartTimeRef = 0
   let lastCloseTimerStartTimeRef = 0
@@ -104,11 +108,11 @@ const Toast: Component<ToastProps> = (props) => {
 
     createEffect(() => {
       props.setHeights((heights) => {
-        const alreadyExists = heights.find(height => height.toastId === props.toast.id)
+        const alreadyExists = heights.find(height => isSameToast(height))
         if (!alreadyExists)
-          return [{ toastId: props.toast.id, height: newHeight, position: props.toast.position }, ...heights]
+          return [{ toastId: props.toast.id, toasterId: props.toast.toasterId, height: newHeight, position: props.toast.position }, ...heights]
         else
-          return heights.map(height => (height.toastId === props.toast.id ? { ...height, height: newHeight } : height))
+          return heights.map(height => (isSameToast(height) ? { ...height, height: newHeight } : height))
       })
     })
   })
@@ -117,7 +121,7 @@ const Toast: Component<ToastProps> = (props) => {
     // Save the offset for the exit swipe animation
     setRemoved(true)
     setOffsetBeforeRemove(offset())
-    props.setHeights(h => h.filter(height => height.toastId !== props.toast.id))
+    props.setHeights(h => h.filter(height => !isSameToast(height)))
 
     setTimeout(() => {
       props.removeToast(props.toast)
@@ -180,8 +184,8 @@ const Toast: Component<ToastProps> = (props) => {
 
   createEffect(
     on(
-      () => props.toast.id,
-      (toastId) => {
+      () => [props.toast.id, props.toast.toasterId] as const,
+      ([toastId, toasterId]) => {
         const toastNode = toastRef
 
         if (toastNode) {
@@ -189,10 +193,13 @@ const Toast: Component<ToastProps> = (props) => {
 
           // Add toast height tot heights array after the toast is mounted
           setInitialHeight(height)
-          props.setHeights(h => [{ toastId, height, position: props.toast.position }, ...h])
+          props.setHeights(h => [
+            { toastId, toasterId, height, position: props.toast.position },
+            ...h.filter(height => !isSameToast(height)),
+          ])
 
           onCleanup(() => {
-            props.setHeights(h => h.filter(height => height.toastId !== toastId))
+            props.setHeights(h => h.filter(height => !isSameToast(height)))
           })
         }
       },
@@ -419,6 +426,7 @@ const Toaster: Component<ToasterProps> = (props) => {
     position: 'bottom-right',
     hotkey: ['altKey', 'KeyT'],
     theme: 'light',
+    gap: GAP,
     visibleToasts: VISIBLE_TOASTS_AMOUNT,
     dir: getDocumentDirection(),
   }, props) as ToasterProps & { position: Position; hotkey: string[]; visibleToasts: number }
@@ -430,9 +438,16 @@ const Toaster: Component<ToasterProps> = (props) => {
    */
   const [toastsStore, setToastsStore] = createStore<{ toasts: ToastT[] }>({ toasts: [] })
 
+  const filteredToasts = createMemo(() => {
+    if (propsWithDefaults.id)
+      return toastsStore.toasts.filter(toast => toast.toasterId === propsWithDefaults.id)
+
+    return toastsStore.toasts.filter(toast => !toast.toasterId)
+  })
+
   const possiblePositions = () => {
     return Array.from(
-      new Set([propsWithDefaults.position].concat(toastsStore.toasts.filter(toast => toast.position).map(toast => toast.position as Position))),
+      new Set([propsWithDefaults.position].concat(filteredToasts().filter(toast => toast.position).map(toast => toast.position as Position))),
     )
   }
   const [heights, setHeights] = createSignal<HeightT[]>([])
@@ -451,7 +466,8 @@ const Toaster: Component<ToasterProps> = (props) => {
           : 'light'
         : 'light',
   )
-  const removeToast = (toast: ToastT) => setToastsStore('toasts', toasts => toasts.filter(({ id }) => id !== toast.id))
+  const removeToast = (toast: ToastT) =>
+    setToastsStore('toasts', toasts => toasts.filter(({ id, toasterId }) => !(id === toast.id && toasterId === toast.toasterId)))
 
   onMount(() => {
     const unsub = ToastState.subscribe((toast) => {
@@ -465,16 +481,18 @@ const Toaster: Component<ToasterProps> = (props) => {
         return
       }
 
+      const nextToast = toast as ToastT
+
       // Update (Fine-grained)
-      const changedIndex = toastsStore.toasts.findIndex(t => t.id === toast.id)
+      const changedIndex = toastsStore.toasts.findIndex(t => t.id === nextToast.id && t.toasterId === nextToast.toasterId)
       if (changedIndex !== -1) {
-        setToastsStore('toasts', [changedIndex], reconcile(toast))
+        setToastsStore('toasts', [changedIndex], reconcile(nextToast))
         return
       }
 
       // Insert (Fine-grained)
       setToastsStore('toasts', produce((_toasts) => {
-        _toasts.unshift(toast)
+        _toasts.unshift(nextToast)
       }))
     })
 
@@ -508,7 +526,7 @@ const Toaster: Component<ToasterProps> = (props) => {
 
   createEffect(() => {
     // Ensure expanded is always false when no toasts are present / only one left
-    if (toastsStore.toasts.length <= 1)
+    if (filteredToasts().length <= 1)
       setExpanded(false)
   })
 
@@ -553,12 +571,19 @@ const Toaster: Component<ToasterProps> = (props) => {
   )
 
   return (
-    <Show when={toastsStore.toasts.length > 0}>
+    <Show when={filteredToasts().length > 0}>
       {/* Remove item from normal navigation flow, only available via hotkey */}
       <section aria-label={`Notifications ${hotkeyLabel()}`} tabIndex={-1}>
         <For each={possiblePositions()}>
           {(position, index) => {
             const [y, x] = position.split('-')
+            const toastsByPosition = createMemo(() => {
+              return filteredToasts().filter(toast => (!toast.position && index() === 0) || toast.position === position)
+            })
+            const heightsByPosition = createMemo(() => {
+              return heights().filter(height => !height.position || height.position === position)
+            })
+
             return (
               <ol
               tabIndex={-1}
@@ -566,16 +591,17 @@ const Toaster: Component<ToasterProps> = (props) => {
               dir={propsWithDefaults.dir === 'auto' ? getDocumentDirection() : propsWithDefaults.dir}
               class={propsWithDefaults.class}
               data-sonner-toaster
+              data-toaster-id={propsWithDefaults.id}
               data-theme={actualTheme()}
               data-rich-colors={propsWithDefaults.richColors}
               data-y-position={y}
               data-x-position={x}
               style={
                 {
-                  '--front-toast-height': `${heights()[0]?.height}px`,
+                  '--front-toast-height': `${heightsByPosition()[0]?.height ?? 0}px`,
                   '--offset': typeof propsWithDefaults.offset === 'number' ? `${propsWithDefaults.offset}px` : propsWithDefaults.offset || VIEWPORT_OFFSET,
                   '--width': `${TOAST_WIDTH}px`,
-                  '--gap': `${GAP}px`,
+                  '--gap': `${propsWithDefaults.gap}px`,
                   ...propsWithDefaults.style,
                 }
               }
@@ -606,8 +632,7 @@ const Toaster: Component<ToasterProps> = (props) => {
               }}
               onPointerUp={() => setInteracting(false)}
             >
-              <For each={
-                toastsStore.toasts.filter(toast => (!toast.position && index() === 0) || toast.position === position)}>
+              <For each={toastsByPosition()}>
                 {(toast, index) => (
                     <Toast
                       index={index()}
@@ -623,12 +648,12 @@ const Toaster: Component<ToasterProps> = (props) => {
                       visibleToasts={propsWithDefaults.visibleToasts}
                       closeButton={Boolean(propsWithDefaults.closeButton)}
                       interacting={interacting()}
-                      position={propsWithDefaults.position}
+                      position={position as Position}
                       style={propsWithDefaults.toastOptions?.style}
                       unstyled={propsWithDefaults.toastOptions?.unstyled}
                       removeToast={removeToast}
-                      toasts={toastsStore.toasts}
-                      heights={heights()}
+                      toasts={toastsByPosition()}
+                      heights={heightsByPosition()}
                       setHeights={setHeights}
                       expandByDefault={Boolean(propsWithDefaults.expand)}
                       gap={propsWithDefaults.gap}

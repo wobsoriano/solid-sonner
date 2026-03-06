@@ -37,6 +37,7 @@ export interface ToastIcons {
 
 export interface ToastT {
   id: number | string
+  toasterId?: string
   title?: string | JSX.Element
   type?: ToastTypes
   icon?: JSX.Element
@@ -72,6 +73,8 @@ export type Position = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 export interface HeightT {
   height: number
   toastId: number | string
+  toasterId?: string
+  position?: Position
 }
 
 interface ToastOptions {
@@ -84,9 +87,11 @@ interface ToastOptions {
   duration?: number
   unstyled?: boolean
   classes?: ToastClasses
+  toasterId?: string
 }
 
 export interface ToasterProps {
+  id?: string
   invert?: boolean
   theme?: 'light' | 'dark' | 'system'
   position?: Position
