@@ -131,3 +131,10 @@
     width: 100%;
   }
 }
+
+.heroDescription {
+	margin-top: 0;
+	font-size: 18px;
+	text-align: center;
+	text-wrap: balance;
+}
