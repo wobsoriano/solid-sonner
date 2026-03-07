@@ -52,7 +52,7 @@
     "update-deps": "pnpm up -Li",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "release": "bumpp && npm publish",
+    "release": "changeset publish",
     "lint:fix": "eslint . --fix"
   },
   "peerDependencies": {
@@ -63,7 +63,6 @@
     "@changesets/cli": "^2.30.0",
     "@playwright/test": "^1.58.2",
     "@types/node": "^20.19.37",
-    "bumpp": "^9.11.1",
     "copy-to-clipboard": "^3.3.3",
     "esbuild": "^0.21.5",
     "esbuild-plugin-solid": "^0.6.0",
