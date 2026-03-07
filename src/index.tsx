@@ -382,11 +382,11 @@ function Toast(props: ToastProps) {
           return
         if (disabled() || !dismissible())
           return
+        if ((event.target as HTMLElement).closest('button'))
+          return
         dragStartTime = new Date()
         setOffsetBeforeRemove(offset())
         event.currentTarget.setPointerCapture(event.pointerId)
-        if ((event.target as HTMLElement).tagName === 'BUTTON')
-          return
         setSwiping(true)
         setPointerStartRef({ x: event.clientX, y: event.clientY })
       }}
@@ -471,6 +471,8 @@ function Toast(props: ToastProps) {
           aria-label={props.closeButtonAriaLabel ?? 'Close toast'}
           data-disabled={disabled()}
           data-close-button
+          onPointerDown={event => event.stopPropagation()}
+          onPointerUp={event => event.stopPropagation()}
           onClick={() => {
             if (disabled() || !dismissible())
               return

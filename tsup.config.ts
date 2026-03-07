@@ -33,6 +33,13 @@ export default defineConfig((config) => {
   if (!watching && !CI) {
     const package_fields = preset.generatePackageExports(parsed_options)
 
+    if (package_fields.exports) {
+      package_fields.exports = {
+        '.': package_fields.exports,
+        './styles.css': './dist/styles.css',
+      }
+    }
+
     // eslint-disable-next-line no-console
     console.log(`package.json: \n\n${JSON.stringify(package_fields, null, 2)}\n\n`)
 
@@ -41,6 +48,7 @@ export default defineConfig((config) => {
   }
 
   config.injectStyle = true
+  config.onSuccess = 'cp src/styles.css dist/styles.css'
 
   return preset.generateTsupOptions(parsed_options)
 })

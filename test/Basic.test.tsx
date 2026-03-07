@@ -94,5 +94,14 @@ test.describe('Basic functionality', () => {
   test('close button can be enabled from the docs controls', async ({ page }) => {
     await page.getByTestId('other-close-button').click()
     await expect(page.locator('[data-close-button]')).toHaveCount(1)
+    await page.locator('[data-close-button]').click()
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(0)
+  })
+
+  test('headless custom toast can be dismissed', async ({ page }) => {
+    await page.getByTestId('other-headless').click()
+    await expect(page.getByText('Event Created')).toHaveCount(1)
+    await page.getByTestId('close-button').click()
+    await expect(page.getByText('Event Created')).toHaveCount(0)
   })
 })
