@@ -7,7 +7,7 @@ export function Footer() {
         <p class={styles.p}>
           <img src="" alt="" />
           <span>
-            Made by{' '}
+            Ported by{' '}
             <a href="https://twitter.com/wobsoriano" target="_blank">
               wobsoriano.
             </a>

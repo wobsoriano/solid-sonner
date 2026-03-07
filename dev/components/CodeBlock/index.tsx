@@ -28,6 +28,7 @@ interface Props {
 }
 
 export const CodeBlock: Component<Props> = (props) => {
+  /* eslint-disable solid/reactivity */
   const propsWithDefaults = mergeProps({
     language: '',
     autodetect: true,

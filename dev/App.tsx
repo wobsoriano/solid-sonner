@@ -12,13 +12,20 @@ import { Other } from './components/Other'
 
 export default function Home() {
   const [expand, setExpand] = createSignal(false)
-  const [position, setPosition] = createSignal<any>('bottom-right')
+  const [position, setPosition] = createSignal<'bottom-right' | 'top-left' | 'top-right' | 'bottom-left' | 'top-center' | 'bottom-center'>('bottom-right')
   const [richColors, setRichColors] = createSignal(false)
   const [closeButton, setCloseButton] = createSignal(false)
 
   return (
     <>
-      <Toaster richColors={richColors()} closeButton={closeButton()} expand={expand()} position={position()} pauseWhenPageIsHidden={true} />
+      <Toaster
+        offset={32}
+        richColors={richColors()}
+        closeButton={closeButton()}
+        expand={expand()}
+        position={position()}
+      />
+
       <main class="container">
         <Hero />
         <div class="content">

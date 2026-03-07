@@ -18,6 +18,7 @@ export const Position: Component<{
       <div class="buttons">
         <For each={positions}>{position => (
           <button
+            data-testid={`position-${position}`}
             data-active={props.position === position}
             class="button"
             onClick={() => {
