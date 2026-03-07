@@ -60,6 +60,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config-ts": "^0.43.1",
+    "@changesets/cli": "^2.30.0",
     "@playwright/test": "^1.58.2",
     "@types/node": "^20.19.37",
     "bumpp": "^9.11.1",
