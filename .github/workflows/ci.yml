@@ -5,95 +5,68 @@ on:
     branches:
       - main
 
-  pull_request:
-    branches:
-      - main
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.sha }}
+  cancel-in-progress: true
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
+  Check:
+    name: Run svelte-check
+    runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: 18.x
+          version: 10.20.0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
           cache: pnpm
 
-      - name: Setup
-        run: npm i -g @antfu/ni
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: Install
-        run: nci
+      - name: Run svelte-check
+        run: pnpm check
 
-      - name: Lint
-        run: nr lint
-
-  typecheck:
+  Lint:
     runs-on: ubuntu-latest
+    name: Lint
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: 18.x
+          version: 10.20.0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
           cache: pnpm
 
-      - name: Setup
-        run: npm i -g @antfu/ni
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: Install
-        run: nci
+      - run: pnpm lint
 
-      - name: Typecheck
-        run: nr typecheck
-
-  test:
+  Playwright:
     timeout-minutes: 60
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        node: [18.x]
-        os: [ubuntu-latest]
-      fail-fast: false
-
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node ${{ matrix.node }}
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: ${{ matrix.node }}
+          version: 10.20.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
           cache: pnpm
-
-      - name: Setup
-        run: npm i -g @antfu/ni
-
-      - name: Install
-        run: nci
-
-      - name: Build
-        run: nr build
-
-      - name: Playwright Install
-        run: pnpm playwright install --with-deps
-
-      - name: Test
-        run: nr test
-
-      - uses: actions/upload-artifact@v3
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+      - run: pnpm run build
+      - run: pnpm exec playwright install --with-deps
+      - run: pnpm run test || exit 1
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
