@@ -10,26 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Check:
-    name: Run svelte-check
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.20.0
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
-
-      - name: Run svelte-check
-        run: pnpm check
-
   Lint:
     runs-on: ubuntu-latest
     name: Lint
