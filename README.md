@@ -8,11 +8,9 @@
 
 An opinionated toast component for Solid.
 
-Based on the React [implementation](https://sonner.emilkowal.ski/).
+This package tracks the React [Sonner](https://sonner.emilkowal.ski/) API as closely as possible while keeping the implementation Solid-friendly.
 
-## Quick start
-
-Install it:
+## Install
 
 ```bash
 npm i solid-sonner
@@ -22,14 +20,12 @@ yarn add solid-sonner
 pnpm add solid-sonner
 ```
 
-Add `<Toaster />` to your app, it will be the place where all your toasts will be rendered. After that you can use `toast()` from anywhere in your app.
+## Quick start
 
 ```tsx
 import { Toaster, toast } from 'solid-sonner'
 
-// ...
-
-function App() {
+export default function App() {
   return (
     <div>
       <Toaster />
@@ -39,316 +35,169 @@ function App() {
 }
 ```
 
-## Types
+## API
 
-### Default
+Exports:
 
-Most basic toast. You can customize it (and any other type) by passing an options object as the second argument.
+- `Toaster`
+- `toast`
+- `useSonner`
+- types: `Action`, `ExternalToast`, `ToastClassnames`, `ToastT`, `ToastToDismiss`, `ToasterProps`
 
-```jsx
+### Toast types
+
+```tsx
 toast('Event has been created')
+toast.success('Event has been created')
+toast.info('Event has new information')
+toast.warning('Event has warning')
+toast.error('Event has not been created')
+toast.loading('Loading data')
 ```
 
-With custom icon and description:
+With description, icon, and actions:
 
-```jsx
+```tsx
 toast('Event has been created', {
   description: 'Monday, January 3rd at 6:00pm',
   icon: <MyIcon />,
-})
-```
-
-### Success
-
-Renders a checkmark icon in front of the message.
-
-```jsx
-toast.success('Event has been created')
-```
-
-### Info
-
-Renders an error icon in front of the message.
-
-```jsx
-toast.info('Event has new information')
-```
-
-### Warning
-
-Renders an error icon in front of the message.
-
-```jsx
-toast.warning('Event has warning')
-```
-
-### Error
-
-Renders an error icon in front of the message.
-
-```jsx
-toast.error('Event has not been created')
-```
-
-### Action
-
-Renders a button.
-
-```jsx
-toast('Event has been created', {
   action: {
     label: 'Undo',
     onClick: () => console.log('Undo'),
   },
-})
-```
-
-### Promise
-
-Starts in a loading state and will update automatically after the promise resolves or fails.
-
-```jsx
-toast.promise(() => new Promise(resolve => setTimeout(resolve, 2000)), {
-  loading: 'Loading',
-  success: 'Success',
-  error: 'Error',
-})
-```
-
-You can pass a function to the success/error messages to incorporate the result/error of the promise.
-
-```jsx
-toast.promise(promise, {
-  loading: 'Loading...',
-  success: (data) => {
-    return `${data.name} has been added!`
+  cancel: {
+    label: 'Cancel',
   },
+})
+```
+
+### Promise toasts
+
+```tsx
+toast.promise(fetchData(), {
+  loading: 'Loading...',
+  success: data => `${data.name} has been added!`,
   error: 'Error',
 })
 ```
 
-### Loading
+Extended results are supported too:
 
-Renders a toast with a loading spinner. Useful when you want to handle various states yourself instead of using a promise toast.
-
-```jsx
-toast.loading('Loading data')
-```
-
-### Custom JSX
-
-You can pass jsx as the first argument instead of a string to render custom jsx while maintaining default styling. You can use the headless version below for a custom, unstyled toast.
-
-```jsx
-toast(<div>A custom toast with default styling</div>)
-```
-
-### Updating a toast
-
-You can update a toast by using the `toast` function and passing it the id of the toast you want to update, the rest stays the same.
-
-```jsx
-const toastId = toast('Sonner')
-
-toast.success('Toast has been updated', {
-  id: toastId,
+```tsx
+toast.promise(saveProject(), {
+  loading: 'Saving...',
+  success: result => ({
+    message: 'Project saved',
+    description: result.id,
+  }),
+  error: error => ({
+    message: 'Save failed',
+    description: String(error),
+  }),
 })
 ```
 
-## Customization
+### Updating and dismissing
 
-### Headless
+```tsx
+const id = toast('Uploading...', { duration: Number.POSITIVE_INFINITY })
 
-You can use `toast.custom` to render an unstyled toast with custom jsx while maintaining the functionality.
+toast.success('Done', { id })
+toast.dismiss(id)
+toast.dismiss()
+```
 
-```jsx
-toast.custom(t => (
+### Headless custom toasts
+
+```tsx
+toast.custom(id => (
   <div>
-    This is a custom component <button onClick={() => toast.dismiss(t)}>close</button>
+    Custom toast <button onClick={() => toast.dismiss(id)}>close</button>
   </div>
 ))
 ```
 
-### Theme
+### Read current state
 
-You can change the theme using the `theme` prop. Default theme is light.
+```tsx
+const { toasts } = useSonner()
 
-```jsx
-<Toaster theme="dark" />
+toast.getToasts()
+toast.getHistory()
 ```
 
-### Position
-
-You can change the position through the `position` prop on the `<Toaster />` component. Default is `bottom-right`.
-
-```jsx
-// Available positions
-// top-left, top-center, top-right, bottom-left, bottom-center, bottom-right
-
-<Toaster position="top-center" />
-```
-
-### Expanded
-
-Toasts can also be expanded by default through the `expand` prop. You can also change the amount of visible toasts which is 3 by default.
-
-```jsx
-<Toaster expand visibleToasts={9} />
-```
-
-### Styling
-
-Styling can be done globally via `toastOptions`, this way every toast will have the same styling.
-
-```jsx
-<Toaster
-  toastOptions={{ style: { background: 'red' }, class: 'my-toast', descriptionClass: 'my-toast-description' }}
-/>
-```
-
-You can also use the same props when calling toast to style a specific toast.
-
-```jsx
-toast('Event has been created', {
-  style: {
-    background: 'red',
-  },
-  class: 'my-toast',
-  descriptionClass: 'my-toast-description',
-})
-```
-
-### Tailwind CSS
-
-The preferred way to style the toasts with tailwind is by using the `unstyled` prop. That will give you an unstyled toast which you can then style with tailwind.
+## Toaster props
 
 ```tsx
 <Toaster
+  theme="system"
+  position="top-right"
+  richColors
+  closeButton
+  expand
+  visibleToasts={5}
+  duration={5000}
+  gap={14}
+  offset={32}
+  mobileOffset={{ bottom: 24, left: 16, right: 16 }}
+  hotkey={['altKey', 'KeyT']}
+  dir="auto"
+  swipeDirections={['top', 'right']}
+  containerAriaLabel="Notifications"
   toastOptions={{
-    unstyled: true,
-    classes: {
-      toast: 'bg-blue-400',
-      title: 'text-red-400',
-      description: 'text-red-400',
-      actionButton: 'bg-zinc-400',
-      cancelButton: 'bg-orange-400',
-      closeButton: 'bg-lime-400',
+    className: 'my-toast',
+    descriptionClassName: 'my-toast-description',
+    closeButtonAriaLabel: 'Close notification',
+    classNames: {
+      toast: 'toast',
+      title: 'title',
+      description: 'description',
     },
   }}
 />
 ```
 
-You can do the same when calling `toast()`.
+Legacy aliases from older `solid-sonner` versions still work for compatibility:
+
+- `class` -> `className`
+- `classes` -> `classNames`
+- `descriptionClass` -> `descriptionClassName`
+
+## Multiple toasters
 
 ```tsx
-toast('Hello World', {
-  unstyled: true,
-  classes: {
-    toast: 'bg-blue-400',
-    title: 'text-red-400 text-2xl',
-    description: 'text-red-400',
-    actionButton: 'bg-zinc-400',
-    cancelButton: 'bg-orange-400',
-    closeButton: 'bg-lime-400',
-  },
-})
+<>
+  <Toaster />
+  <Toaster id="sidebar" position="top-left" />
+</>
+
+toast('Global toast')
+toast('Sidebar toast', { toasterId: 'sidebar' })
 ```
 
-Styling per toast type is also possible.
+## Tailwind / unstyled mode
 
 ```tsx
 <Toaster
   toastOptions={{
     unstyled: true,
-    classes: {
-      error: 'bg-red-400',
-      success: 'text-green-400',
-      warning: 'text-yellow-400',
-      info: 'bg-blue-400',
+    classNames: {
+      toast: 'bg-blue-500 text-white',
+      title: 'font-semibold',
+      description: 'text-blue-100',
+      actionButton: 'bg-white text-blue-700',
+      cancelButton: 'bg-blue-700 text-white',
+      closeButton: 'bg-white text-black',
     },
   }}
 />
 ```
 
-### Close button
+## Notes
 
-Add a close button to all toasts that shows on hover by adding the `closeButton` prop.
-
-```jsx
-<Toaster closeButton />
-```
-
-### Rich colors
-
-You can make error and success state more colorful by adding the `richColors` prop.
-
-```jsx
-<Toaster richColors />
-```
-
-### Custom offset
-
-Offset from the edges of the screen.
-
-```jsx
-<Toaster offset="80px" />
-```
-
-### Programmatically remove toast
-
-To remove a toast programmatically use `toast.dismiss(id)`.
-
-```jsx
-const toastId = toast('Event has been created')
-
-toast.dismiss(toastId)
-```
-
-You can also use the dismiss method without the id to dismiss all toasts.
-
-```jsx
-// Removes all toasts
-
-toast.dismiss()
-```
-
-### Duration
-
-You can change the duration of each toast by using the `duration` property, or change the duration of all toasts like this:
-
-```jsx
-<Toaster duration={10000} />
-```
-
-```jsx
-toast('Event has been created', {
-  duration: 10000,
-})
-
-// Persisent toast
-toast('Event has been created', {
-  duration: Number.POSITIVE_INFINITY,
-})
-```
-
-### On Close Callback
-
-You can pass `onDismiss` and `onAutoClose` callbacks. `onDismiss` gets fired when either the close button gets clicked or the toast is swiped. `onAutoClose` fires when the toast disappears automatically after it's timeout (`duration` prop).
-
-```jsx
-toast('Event has been created', {
-  onDismiss: t => console.log(`Toast with id ${t.id} has been dismissed`),
-  onAutoClose: t => console.log(`Toast with id ${t.id} has been closed automatically`),
-})
-```
-
-## Keyboard focus
-
-You can focus on the toast area by pressing ⌥/alt + T. You can override it by providing an array of event.code values for each key.
-
-```jsx
-<Toaster hotkey={['KeyC']} />
-```
+- `pauseWhenPageIsHidden` is available and defaults to Sonner-like hidden-page pausing behavior
+- Per-toast `closeButton`, `dismissible`, `richColors`, `testId`, and `toasterId` are supported
+- `action` respects `event.preventDefault()` and will keep the toast open
 
 ## License
 

@@ -93,12 +93,11 @@ export function Other(props: {
         <For each={allTypes}>{type => (
           <button
             class="button"
-            data-testid={`other-${type.name}`}
+            data-testid={`other-${type.name.toLowerCase().replace(/\s+/g, '-')}`}
             onClick={() => {
               type.action()
               setActiveType(type)
             }}
-
           >
             {type.name}
           </button>

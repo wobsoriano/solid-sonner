@@ -14,7 +14,7 @@ export function Hero() {
       <p style={{ 'margin-top': 0, 'font-size': '18px' }}>An opinionated toast component for Solid.</p>
       <div class={styles.buttons}>
         <button
-          data-testid="default-button"
+          data-testid="hero-default-button"
           data-primary=""
           onClick={() => {
             toast('Sonner', {
