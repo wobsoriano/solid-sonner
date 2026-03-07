@@ -11,7 +11,7 @@ export function Hero() {
         <div class={styles.toast} />
       </div>
       <h1 class={styles.heading}>Solid Sonner</h1>
-      <p style={{ 'margin-top': 0, 'font-size': '18px' }}>An opinionated toast component for Solid.</p>
+      <p style={{ 'margin-top': 0, 'font-size': '18px' }}>An opinionated toast component for Solid. <br /> A port of Emil Kowalski's Sonner</p>
       <div class={styles.buttons}>
         <button
           data-testid="hero-default-button"

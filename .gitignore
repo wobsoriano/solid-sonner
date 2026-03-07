@@ -8,3 +8,5 @@ tsup.config.bundled_*.{m,c,}s
 /test-results/
 /playwright-report/
 /playwright/.cache/
+.agents/
+skills-lock.json
