@@ -20,6 +20,7 @@ export function Loader(props: { visible: boolean; class?: string; className?: st
 function SuccessIcon() {
   return (
     <svg
+      aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 20 20"
       fill="currentColor"
@@ -38,6 +39,7 @@ function SuccessIcon() {
 function WarningIcon() {
   return (
     <svg
+      aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="currentColor"
@@ -56,6 +58,7 @@ function WarningIcon() {
 function InfoIcon() {
   return (
     <svg
+      aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 20 20"
       fill="currentColor"
@@ -74,6 +77,7 @@ function InfoIcon() {
 function ErrorIcon() {
   return (
     <svg
+      aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 20 20"
       fill="currentColor"
@@ -107,6 +111,7 @@ export function getAsset(type?: ToastTypes): JSX.Element | null {
 export function CloseIcon() {
   return (
     <svg
+      aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="12"
       height="12"

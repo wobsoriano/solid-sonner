@@ -136,7 +136,8 @@ function mergeClassName(className?: string, legacy?: string) {
 }
 
 function useSonner() {
-  const [activeToasts, setActiveToasts] = createSignal<ToastT[]>(toast.getToasts());
+  // Starts empty: subscribing replays whatever is already active.
+  const [activeToasts, setActiveToasts] = createSignal<ToastT[]>([]);
 
   onMount(() => {
     const unsubscribe = ToastState.subscribe((toastItem) => {
@@ -216,6 +217,8 @@ function Toast(props: ToastProps) {
   const duration = () => props.toast.duration ?? props.duration ?? TOAST_LIFETIME;
   const invert = () => props.toast.invert ?? props.invert;
   const disabled = () => toastType() === 'loading';
+  // Toasts created with `toast()` have no type, `classNames.default` is the key for those.
+  const toastTypeKey = () => (toastType() ?? 'default') as keyof ToastClassnames;
   const swipeDirections = () => props.swipeDirections ?? getDefaultSwipeDirections(props.position);
   const y = createMemo(() => props.position.split('-')[0]);
   const x = createMemo(() => props.position.split('-')[1]);
@@ -400,9 +403,8 @@ function Toast(props: ToastProps) {
         toastClassName(),
         classNames()?.toast,
         toastClassNames()?.toast,
-        classNames()?.default,
-        classNames()?.[toastType() as keyof ToastClassnames],
-        toastClassNames()?.[toastType() as keyof ToastClassnames],
+        classNames()?.[toastTypeKey()],
+        toastClassNames()?.[toastTypeKey()],
       )}
       data-sonner-toast=""
       data-rich-colors={props.toast.richColors ?? props.defaultRichColors}
@@ -463,7 +465,15 @@ function Toast(props: ToastProps) {
         const swipeAmount = swipeDirection() === 'x' ? swipeAmountX : swipeAmountY;
         const velocity = Math.abs(swipeAmount) / timeTaken;
 
-        if (Math.abs(swipeAmount) >= SWIPE_THRESHOLD || velocity > 0.11) {
+        // Movement towards a direction that isn't allowed is dampened, not
+        // blocked, so a fast flick can still pass the velocity check. Only
+        // dismiss if the direction is allowed.
+        const isAllowedDirection =
+          swipeDirection() === 'x'
+            ? swipeDirections().includes(swipeAmountX > 0 ? 'right' : 'left')
+            : swipeDirections().includes(swipeAmountY > 0 ? 'bottom' : 'top');
+
+        if (isAllowedDirection && (Math.abs(swipeAmount) >= SWIPE_THRESHOLD || velocity > 0.11)) {
           setOffsetBeforeRemove(offset());
           props.toast.onDismiss?.(props.toast);
 
@@ -506,7 +516,11 @@ function Toast(props: ToastProps) {
               (swipeDirections().includes('bottom') && yDelta > 0)
             )
               swipeAmount.y = yDelta;
-            else swipeAmount.y = yDelta * getDampening(yDelta);
+            else {
+              // Ensure we don't jump when transitioning to dampened movement
+              const dampenedDelta = yDelta * getDampening(yDelta);
+              swipeAmount.y = Math.abs(dampenedDelta) < Math.abs(yDelta) ? dampenedDelta : yDelta;
+            }
           }
         } else if (swipeDirection() === 'x') {
           if (swipeDirections().includes('left') || swipeDirections().includes('right')) {
@@ -515,7 +529,11 @@ function Toast(props: ToastProps) {
               (swipeDirections().includes('right') && xDelta > 0)
             )
               swipeAmount.x = xDelta;
-            else swipeAmount.x = xDelta * getDampening(xDelta);
+            else {
+              // Ensure we don't jump when transitioning to dampened movement
+              const dampenedDelta = xDelta * getDampening(xDelta);
+              swipeAmount.x = Math.abs(dampenedDelta) < Math.abs(xDelta) ? dampenedDelta : xDelta;
+            }
           }
         }
 
@@ -551,10 +569,13 @@ function Toast(props: ToastProps) {
         }
       >
         <div data-icon="" class={cn(classNames()?.icon, toastClassNames()?.icon)}>
-          {props.toast.promise || (props.toast.type === 'loading' && !props.toast.icon)
+          {/* Promise toasts keep the loader mounted after they settle so it can animate out */}
+          {toastType() === 'loading'
             ? props.toast.icon || getLoadingIcon()
-            : null}
-          {props.toast.type !== 'loading' ? icon() : null}
+            : props.toast.promise
+              ? getLoadingIcon()
+              : null}
+          {toastType() !== 'loading' ? icon() : null}
         </div>
       </Show>
 
