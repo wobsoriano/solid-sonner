@@ -12,19 +12,40 @@ import {
 
 let toastsCounter = 1;
 
+// Amount of toasts kept in `toast.getHistory()`. Dismissed toasts above this
+// limit are dropped so long-running apps don't hold on to them forever.
+const MAX_HISTORY_SIZE = 100;
+
+// A toast keeps the id it was given, otherwise it gets the next one from the
+// counter. `custom` needs the same id `create` would pick, as it hands it to
+// the JSX callback.
+function getToastId(data?: { id?: number | string }): number | string {
+  return typeof data?.id === 'number' || (typeof data?.id === 'string' && data.id.length > 0)
+    ? data.id
+    : toastsCounter++;
+}
+
 class Observer {
   subscribers: Array<(toast: ToastT | ToastToDismiss) => void>;
   toasts: Array<ToastT | ToastToDismiss>;
   dismissedToasts: Set<string | number>;
+  // Dismissals that have been requested but not handed to the subscribers yet
+  private pendingDismissals: Map<string | number, number>;
 
   constructor() {
     this.subscribers = [];
     this.toasts = [];
     this.dismissedToasts = new Set();
+    this.pendingDismissals = new Map();
   }
 
   subscribe = (subscriber: (toast: ToastT | ToastToDismiss) => void) => {
     this.subscribers.push(subscriber);
+
+    // A toast can be created before the `Toaster` had a chance to subscribe,
+    // e.g. when it's called above the `Toaster` in the tree. Replay whatever
+    // is still active so it doesn't get lost.
+    this.getActiveToasts().forEach((toast) => subscriber(toast));
 
     return () => {
       const index = this.subscribers.indexOf(subscriber);
@@ -39,6 +60,23 @@ class Observer {
   addToast = (data: ToastT) => {
     this.publish(data);
     this.toasts = [...this.toasts, data];
+    this.trimHistory();
+  };
+
+  // Keeps the history bounded without ever dropping a toast that's still on screen.
+  private trimHistory = () => {
+    let toRemove = this.toasts.length - MAX_HISTORY_SIZE;
+    if (toRemove <= 0) return;
+
+    this.toasts = this.toasts.filter((toast) => {
+      if (toRemove > 0 && this.dismissedToasts.has(toast.id)) {
+        this.dismissedToasts.delete(toast.id);
+        toRemove--;
+        return false;
+      }
+
+      return true;
+    });
   };
 
   create = (
@@ -50,15 +88,35 @@ class Observer {
     },
   ) => {
     const { message, ...rest } = data;
-    const hasStringId = typeof data.id === 'string' && data.id.length > 0;
-    const id: string | number =
-      typeof data.id === 'number' || hasStringId ? (data.id as string | number) : toastsCounter++;
-    const alreadyExists = this.toasts.find((toast) => {
-      return toast.id === id;
-    });
+    const id = getToastId(data);
+
+    // A dismissal that hasn't reached the subscribers yet gets cancelled: the
+    // toast is still on screen, so this is an update of it rather than a new
+    // toast. Without this, creating a toast right after dismissing the same id
+    // would have the pending dismissal remove the toast that just got created.
+    const pendingDismissal = this.pendingDismissals.get(id);
+    if (pendingDismissal !== undefined) {
+      cancelAnimationFrame(pendingDismissal);
+      this.pendingDismissals.delete(id);
+      this.dismissedToasts.delete(id);
+    }
+
+    const wasDismissed = this.dismissedToasts.has(id);
     const dismissible = data.dismissible === undefined ? true : data.dismissible;
 
-    if (this.dismissedToasts.has(id)) this.dismissedToasts.delete(id);
+    if (wasDismissed) {
+      this.dismissedToasts.delete(id);
+      // The previous toast with this id is gone, so this is a brand new toast.
+      // Drop the old one instead of merging into it, otherwise its props (e.g.
+      // `action`) leak into the new one.
+      this.toasts = this.toasts.filter((toast) => toast.id !== id);
+    }
+
+    const alreadyExists = wasDismissed
+      ? undefined
+      : this.toasts.find((toast) => {
+          return toast.id === id;
+        });
 
     if (alreadyExists) {
       this.toasts = this.toasts.map((toast) => {
@@ -83,23 +141,37 @@ class Observer {
   };
 
   dismiss = (id?: number | string) => {
-    if (id) {
-      this.dismissedToasts.add(id);
-      requestAnimationFrame(() => {
-        this.subscribers.forEach((subscriber) => subscriber({ id, dismiss: true }));
-      });
-    } else {
-      this.toasts.forEach((toast) => {
+    if (id === undefined || id === null) {
+      this.getActiveToasts().forEach((toast) => {
         this.dismissedToasts.add(toast.id);
         this.subscribers.forEach((subscriber) => subscriber({ id: toast.id, dismiss: true }));
       });
+
+      return id;
     }
+
+    this.dismissedToasts.add(id);
+
+    const alreadyPending = this.pendingDismissals.get(id);
+    if (alreadyPending !== undefined) {
+      cancelAnimationFrame(alreadyPending);
+    }
+
+    this.pendingDismissals.set(
+      id,
+      requestAnimationFrame(() => {
+        this.pendingDismissals.delete(id);
+        this.subscribers.forEach((subscriber) => subscriber({ id, dismiss: true }));
+      }),
+    );
 
     return id;
   };
 
   message = (message: ToastContent, data?: ExternalToast) => {
-    return this.create({ ...data, message });
+    // `type: undefined` resets the type when this updates a toast that had one,
+    // e.g. turning a loading toast into a plain one.
+    return this.create({ ...data, message, type: undefined });
   };
 
   error = (message: ToastContent, data?: ExternalToast) => {
@@ -243,8 +315,9 @@ class Observer {
   };
 
   custom = (jsx: (id: number | string) => JSX.Element, data?: ExternalToast) => {
-    const id = data?.id || toastsCounter++;
-    this.create({ jsx: jsx(id), ...data, id });
+    const id = getToastId(data);
+    // A custom toast has no type, so it resets the one of the toast it replaces
+    this.create({ ...data, jsx: jsx(id), id, type: undefined });
     return id;
   };
 
@@ -275,15 +348,7 @@ function isValidElement(value: unknown): value is JSX.Element {
 export const ToastState = new Observer();
 
 function toastFunction(message: ToastContent, data?: ExternalToast) {
-  const id = data?.id || toastsCounter++;
-
-  ToastState.addToast({
-    title: message,
-    ...data,
-    id,
-  });
-
-  return id;
+  return ToastState.message(message, data);
 }
 
 const basicToast = toastFunction;
