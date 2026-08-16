@@ -1,6 +1,6 @@
 {
   "name": "solid-sonner",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": false,
   "description": "An opinionated toast component for Solid.",
   "keywords": [
