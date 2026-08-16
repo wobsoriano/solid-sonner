@@ -187,6 +187,7 @@ test.describe('Upstream regressions', () => {
     await page.evaluate(() =>
       window.__sonnerTest.toast.success('has an action', {
         id: 'reused',
+        duration: Number.POSITIVE_INFINITY,
         action: { label: 'Undo', onClick: () => {} },
       }),
     );
@@ -196,9 +197,21 @@ test.describe('Upstream regressions', () => {
     // Outlive the 200ms exit animation, so the id is genuinely free again.
     await page.waitForTimeout(400);
 
-    await page.evaluate(() => window.__sonnerTest.toast.success('no action', { id: 'reused' }));
-    await expect(page.getByText('no action')).toHaveCount(1);
-    await expect(page.locator('[data-button]')).toHaveCount(0);
+    // Infinite duration on purpose: with the default 4s the toast would
+    // auto-close inside the retry window, and `toHaveCount(0)` would pass
+    // because the toast vanished rather than because the action was dropped.
+    await page.evaluate(() =>
+      window.__sonnerTest.toast.success('no action', {
+        id: 'reused',
+        duration: Number.POSITIVE_INFINITY,
+      }),
+    );
+    // One atomic assertion on purpose. Asserting "toast is present" and "no
+    // action button" separately lets both pass at different moments: the
+    // recreated toast can flash up and then be removed again, so the first
+    // assertion catches it while present and the second passes once it is gone.
+    // Exact text covers both at once, and fails on the leaked "Undo" label.
+    await expect(page.locator('[data-sonner-toast]')).toHaveText('no action');
   });
 
   test('toast recreated right after being dismissed stays on screen', async ({ page }) => {
@@ -290,7 +303,11 @@ test.describe('Upstream regressions', () => {
   // thing to a real flick. setPointerCapture is stubbed because a synthetic
   // pointerId is not an active pointer and it would otherwise throw.
   const flick = async (page: Page, dy: number) => {
-    await page.evaluate(() => window.__sonnerTest.toast('swipe me'));
+    // Infinite duration so the only thing that can remove this toast is the
+    // gesture, not the auto-close timer.
+    await page.evaluate(() =>
+      window.__sonnerTest.toast('swipe me', { duration: Number.POSITIVE_INFINITY }),
+    );
     await expect(page.locator('[data-sonner-toast]')).toBeVisible();
 
     await page.evaluate((distance) => {
