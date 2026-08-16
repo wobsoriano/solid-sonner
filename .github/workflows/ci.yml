@@ -52,7 +52,7 @@ jobs:
       # go through the package.json script.
       - run: vp run test
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
