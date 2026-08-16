@@ -1,11 +1,8 @@
-import { toast } from 'src/'
-import type { Setter } from 'solid-js'
-import { CodeBlock } from '../CodeBlock'
+import { toast } from 'src/';
+import type { Setter } from 'solid-js';
+import { CodeBlock } from '../CodeBlock';
 
-export function ExpandModes(props: {
-  expand: boolean
-  setExpand: Setter<boolean>
-}) {
+export function ExpandModes(props: { expand: boolean; setExpand: Setter<boolean> }) {
   return (
     <div>
       <h2>Expand</h2>
@@ -20,8 +17,8 @@ export function ExpandModes(props: {
           onClick={() => {
             toast('Event has been created', {
               description: 'Monday, January 3rd at 6:00pm',
-            })
-            props.setExpand(true)
+            });
+            props.setExpand(true);
           }}
         >
           Expand
@@ -33,8 +30,8 @@ export function ExpandModes(props: {
           onClick={() => {
             toast('Event has been created', {
               description: 'Monday, January 3rd at 6:00pm',
-            })
-            props.setExpand(false)
+            });
+            props.setExpand(false);
           }}
         >
           Default
@@ -42,5 +39,5 @@ export function ExpandModes(props: {
       </div>
       <CodeBlock>{`<Toaster expand={${props.expand}} />`}</CodeBlock>
     </div>
-  )
+  );
 }

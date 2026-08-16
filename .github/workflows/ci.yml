@@ -15,37 +15,43 @@ jobs:
     name: Lint
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+
+      # Sets up vp, Node and pnpm and installs, replacing setup-node and
+      # pnpm/action-setup. The vp version is read from the vite-plus dependency.
+      # Exact tag on purpose: the moving v1 tag is frozen.
+      - uses: voidzero-dev/setup-vp@v1.17.0
         with:
-          version: 10.20.0
+          node-version: '24'
+          cache: true
+          run-install: |
+            - args: ['--frozen-lockfile', '--prefer-offline']
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
+      # oxfmt and oxlint.
+      - run: vp check
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
-
-      - run: pnpm lint
+      - run: vp run typecheck
 
   Playwright:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+
+      - uses: voidzero-dev/setup-vp@v1.17.0
         with:
-          version: 10.20.0
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
-      - run: pnpm run build
-      - run: pnpm exec playwright install --with-deps
-      - run: pnpm run test || exit 1
+          node-version: '24'
+          cache: true
+          run-install: |
+            - args: ['--frozen-lockfile', '--prefer-offline']
+
+      - run: vp pack
+
+      - run: vp exec playwright install --with-deps
+
+      # `vp test` is the built-in Vitest runner, so the Playwright suite has to
+      # go through the package.json script.
+      - run: vp run test
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:

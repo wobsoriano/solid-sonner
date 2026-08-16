@@ -1,4 +1,4 @@
-import type { PlaywrightTestConfig } from '@playwright/test'
+import type { PlaywrightTestConfig } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
   webServer: {
@@ -8,6 +8,6 @@ const config: PlaywrightTestConfig = {
   },
   testDir: 'test',
   testMatch: /(.+\.)?(test|spec)\.[jt]sx?$/,
-}
+};
 
-export default config
+export default config;

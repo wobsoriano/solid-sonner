@@ -1,4 +1,4 @@
-import styles from './footer.module.css'
+import styles from './footer.module.css';
 
 export function Footer() {
   return (
@@ -15,5 +15,5 @@ export function Footer() {
         </p>
       </div>
     </footer>
-  )
+  );
 }

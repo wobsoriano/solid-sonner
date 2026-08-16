@@ -27,8 +27,21 @@ html[dir='rtl'],
 [data-sonner-toaster] {
   position: fixed;
   width: var(--width);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial,
-    Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    Roboto,
+    Helvetica Neue,
+    Arial,
+    Noto Sans,
+    sans-serif,
+    Apple Color Emoji,
+    Segoe UI Emoji,
+    Segoe UI Symbol,
+    Noto Color Emoji;
   --gray1: hsl(0, 0%, 99%);
   --gray2: hsl(0, 0%, 97.3%);
   --gray3: hsl(0, 0%, 95.1%);
@@ -86,7 +99,11 @@ html[dir='rtl'],
   opacity: 0;
   transform: var(--y);
   touch-action: none;
-  transition: transform 400ms, opacity 400ms, height 400ms, box-shadow 200ms;
+  transition:
+    transform 400ms,
+    opacity 400ms,
+    height 400ms,
+    box-shadow 200ms;
   box-sizing: border-box;
   outline: none;
   overflow-wrap: anywhere;
@@ -107,7 +124,9 @@ html[dir='rtl'],
 }
 
 [data-sonner-toast]:focus-visible {
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0px 4px 12px rgba(0, 0, 0, 0.1),
+    0 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
 [data-sonner-toast][data-y-position='top'] {
@@ -176,6 +195,10 @@ html[dir='rtl'],
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* Take the space the icon and the buttons leave, so a custom title or description
+     isn't limited to the width of its text */
+  flex: 1;
+  min-width: 0;
 }
 
 [data-sonner-toast][data-styled='true'] [data-button] {
@@ -195,7 +218,9 @@ html[dir='rtl'],
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  transition: opacity 400ms, box-shadow 200ms;
+  transition:
+    opacity 400ms,
+    box-shadow 200ms;
 }
 
 [data-sonner-toast][data-styled='true'] [data-button]:focus-visible {
@@ -212,7 +237,9 @@ html[dir='rtl'],
   background: rgba(0, 0, 0, 0.08);
 }
 
-[data-sonner-toaster][data-sonner-theme='dark'] [data-sonner-toast][data-styled='true'] [data-cancel] {
+[data-sonner-toaster][data-sonner-theme='dark']
+  [data-sonner-toast][data-styled='true']
+  [data-cancel] {
   background: rgba(255, 255, 255, 0.3);
 }
 
@@ -234,11 +261,16 @@ html[dir='rtl'],
   border-radius: 50%;
   cursor: pointer;
   z-index: 1;
-  transition: opacity 100ms, background 200ms, border-color 200ms;
+  transition:
+    opacity 100ms,
+    background 200ms,
+    border-color 200ms;
 }
 
 [data-sonner-toast][data-styled='true'] [data-close-button]:focus-visible {
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0px 4px 12px rgba(0, 0, 0, 0.1),
+    0 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
 [data-sonner-toast][data-styled='true'] [data-disabled='true'] {
@@ -335,7 +367,9 @@ html[dir='rtl'],
 [data-sonner-toast][data-removed='true'][data-front='false'][data-swipe-out='false'][data-expanded='false'] {
   --y: translateY(40%);
   opacity: 0;
-  transition: transform 500ms, opacity 200ms;
+  transition:
+    transform 500ms,
+    opacity 200ms;
 }
 
 [data-sonner-toast][data-removed='true'][data-front='false']::before {
@@ -716,7 +750,9 @@ html[dir='rtl'],
   left: 50%;
   transform: translate(-50%, -50%);
   transform-origin: center;
-  transition: opacity 200ms, transform 200ms;
+  transition:
+    opacity 200ms,
+    transform 200ms;
 }
 
 .sonner-loader[data-visible='false'] {
