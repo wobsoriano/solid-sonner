@@ -27,8 +27,8 @@ importers:
         specifier: ^1.9.14
         version: 1.9.14
       typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
       unplugin-solid:
         specifier: ^2.0.0
         version: 2.0.0(esbuild@0.27.3)(rolldown@1.2.4)(rollup@4.59.0)(solid-js@1.9.14)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))
@@ -40,7 +40,7 @@ importers:
         version: 2.11.14(solid-js@1.9.14)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))
       vite-plus:
         specifier: ^0.2.9
-        version: 0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@5.9.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0)
+        version: 0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@6.0.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0)
 
 packages:
 
@@ -2138,8 +2138,8 @@ packages:
     resolution: {integrity: sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw==}
     engines: {node: '>=18'}
 
-  typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -3320,7 +3320,7 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.1
 
-  '@voidzero-dev/vite-plus-core@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(typescript@5.9.3)(yaml@2.9.0)':
+  '@voidzero-dev/vite-plus-core@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(typescript@6.0.3)(yaml@2.9.0)':
     dependencies:
       '@oxc-project/runtime': 0.143.0
       '@oxc-project/types': 0.143.0
@@ -3340,7 +3340,7 @@ snapshots:
       '@voidzero-dev/vite-plus-win32-x64-msvc': 0.2.9
       esbuild: 0.27.3
       fsevents: 2.3.3
-      typescript: 5.9.3
+      typescript: 6.0.3
       yaml: 2.9.0
 
   '@voidzero-dev/vite-plus-darwin-arm64@0.2.9':
@@ -3987,7 +3987,7 @@ snapshots:
 
   outdent@0.5.0: {}
 
-  oxfmt@0.62.0(vite-plus@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@5.9.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0)):
+  oxfmt@0.62.0(vite-plus@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@6.0.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0)):
     dependencies:
       tinypool: 2.1.0
     optionalDependencies:
@@ -4010,7 +4010,7 @@ snapshots:
       '@oxfmt/binding-win32-arm64-msvc': 0.62.0
       '@oxfmt/binding-win32-ia32-msvc': 0.62.0
       '@oxfmt/binding-win32-x64-msvc': 0.62.0
-      vite-plus: 0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@5.9.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0)
+      vite-plus: 0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@6.0.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0)
 
   oxlint-tsgolint@7.0.2001:
     optionalDependencies:
@@ -4021,7 +4021,7 @@ snapshots:
       '@oxlint-tsgolint/win32-arm64': 7.0.2001
       '@oxlint-tsgolint/win32-x64': 7.0.2001
 
-  oxlint@1.77.0(oxlint-tsgolint@7.0.2001)(vite-plus@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@5.9.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0)):
+  oxlint@1.77.0(oxlint-tsgolint@7.0.2001)(vite-plus@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@6.0.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0)):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.77.0
       '@oxlint/binding-android-arm64': 1.77.0
@@ -4043,7 +4043,7 @@ snapshots:
       '@oxlint/binding-win32-ia32-msvc': 1.77.0
       '@oxlint/binding-win32-x64-msvc': 1.77.0
       oxlint-tsgolint: 7.0.2001
-      vite-plus: 0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@5.9.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0)
+      vite-plus: 0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@6.0.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0)
 
   p-filter@2.1.0:
     dependencies:
@@ -4327,7 +4327,7 @@ snapshots:
       punycode: 2.3.1
     optional: true
 
-  typescript@5.9.3: {}
+  typescript@6.0.3: {}
 
   undici-types@7.18.2: {}
 
@@ -4394,7 +4394,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vite-plus@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@5.9.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0):
+  vite-plus@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@6.0.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0):
     dependencies:
       '@oxc-project/types': 0.143.0
       '@oxlint/plugins': 1.73.0
@@ -4407,9 +4407,9 @@ snapshots:
       '@vitest/snapshot': 4.1.10
       '@vitest/spy': 4.1.10
       '@vitest/utils': 4.1.10
-      '@voidzero-dev/vite-plus-core': 0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(typescript@5.9.3)(yaml@2.9.0)
-      oxfmt: 0.62.0(vite-plus@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@5.9.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0))
-      oxlint: 1.77.0(oxlint-tsgolint@7.0.2001)(vite-plus@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@5.9.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0))
+      '@voidzero-dev/vite-plus-core': 0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(typescript@6.0.3)(yaml@2.9.0)
+      oxfmt: 0.62.0(vite-plus@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@6.0.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0))
+      oxlint: 1.77.0(oxlint-tsgolint@7.0.2001)(vite-plus@0.2.9(@types/node@24.13.3)(esbuild@0.27.3)(jsdom@24.1.3)(typescript@6.0.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))(yaml@2.9.0))
       oxlint-tsgolint: 7.0.2001
       vitest: 4.1.10(@types/node@24.13.3)(@vitest/browser-preview@4.1.10)(jsdom@24.1.3)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.3)(yaml@2.9.0))
     optionalDependencies:

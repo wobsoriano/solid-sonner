@@ -19,6 +19,10 @@ export default defineConfig({
       outExtensions: () => ({ js: '.jsx' }),
     },
   ],
+  staged: {
+    '*.{ts,tsx,js,jsx}': 'vp check --fix',
+    '*.{css,json,md,yml,yaml}': 'vp fmt',
+  },
   fmt: {
     singleQuote: true,
     ignorePatterns: ['CHANGELOG.md'],
