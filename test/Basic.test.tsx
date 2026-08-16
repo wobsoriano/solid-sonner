@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
@@ -118,5 +119,155 @@ test.describe('Basic functionality', () => {
     await expect(page.getByText('Event Created')).toHaveCount(1);
     await page.getByTestId('close-button').click();
     await expect(page.getByText('Event Created')).toHaveCount(0);
+  });
+});
+
+// Each of these covers a fix ported from upstream sonner#777.
+test.describe('Upstream regressions', () => {
+  test('classNames.default is only applied to toasts without a type', async ({ page }) => {
+    await page.getByTestId('types-default').click();
+    await expect(page.locator('[data-sonner-toast]').first()).toHaveClass(/toast-default/);
+
+    await page.getByTestId('types-success').click();
+    const success = page.locator('[data-sonner-toast][data-type="success"]');
+    await expect(success).toHaveClass(/toast-success/);
+    await expect(success).not.toHaveClass(/toast-default/);
+  });
+
+  test('custom icon is only rendered once in a settled promise toast', async ({ page }) => {
+    await page.getByTestId('promise-custom-icon').click();
+    await expect(page.getByText('Settled')).toHaveCount(1);
+    await expect(page.getByTestId('custom-promise-icon')).toHaveCount(1);
+  });
+
+  test('decorative icons are hidden from assistive technology', async ({ page }) => {
+    await page.getByTestId('types-success').click();
+    await expect(page.locator('[data-sonner-toast] [data-icon] svg').first()).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+
+    await page.getByTestId('other-close-button').click();
+    await expect(page.locator('[data-close-button] svg').first()).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+  });
+
+  test('toast created while the Toaster is unmounted is replayed on mount', async ({ page }) => {
+    await page.getByTestId('premount-toast').click();
+    await expect(page.getByText('Fired while unmounted')).toHaveCount(1);
+  });
+
+  test('a new toast reusing a dismissed id does not inherit its props', async ({ page }) => {
+    await page.getByTestId('reused-id-with-action').click();
+    await expect(page.locator('[data-button]')).toHaveCount(1);
+
+    await page.getByTestId('reused-id-without-action').click();
+    await expect(page.getByText('No action')).toHaveCount(1);
+    await expect(page.locator('[data-button]')).toHaveCount(0);
+  });
+
+  test('toast recreated right after being dismissed stays on screen', async ({ page }) => {
+    await page.getByTestId('dismiss-and-recreate').click();
+    await expect(page.getByText('Recreated toast')).toHaveCount(1);
+    // Outlives the dismissal that was already in flight when it was created.
+    await page.waitForTimeout(600);
+    await expect(page.getByText('Recreated toast')).toHaveCount(1);
+  });
+
+  test('toast() clears the loading state of a toast with the same id', async ({ page }) => {
+    await page.getByTestId('loading-fixed-id').click();
+    await expect(page.locator('[data-sonner-toast][data-type="loading"]')).toHaveCount(1);
+
+    await page.getByTestId('default-over-loading').click();
+    await expect(page.getByText('Plain now')).toHaveCount(1);
+    await expect(page.locator('[data-sonner-toast][data-type="loading"]')).toHaveCount(0);
+  });
+
+  test('toast.custom() clears the loading state of a toast with the same id', async ({ page }) => {
+    await page.getByTestId('loading-fixed-id').click();
+    await expect(page.locator('[data-sonner-toast][data-type="loading"]')).toHaveCount(1);
+
+    await page.getByTestId('custom-over-loading').click();
+    await expect(page.getByText('Custom now')).toHaveCount(1);
+    await expect(page.locator('[data-sonner-toast][data-type="loading"]')).toHaveCount(0);
+  });
+
+  test('content fills the toast rather than hugging its text', async ({ page }) => {
+    await page.getByTestId('short-content').click();
+    const toast = page.locator('[data-sonner-toast]').first();
+    await expect(toast).toBeVisible();
+
+    const toastBox = await toast.boundingBox();
+    const contentBox = await toast.locator('[data-content]').boundingBox();
+    if (!toastBox || !contentBox) throw new Error('Missing bounding box');
+
+    // Without flex: 1 the content would only be as wide as the word "Hi".
+    expect(contentBox.width).toBeGreaterThan(toastBox.width * 0.8);
+  });
+
+  test('toast.custom() keeps an id of 0', async ({ page }) => {
+    await page.getByTestId('custom-zero-id').click();
+    await expect(page.getByText('Zero id toast')).toHaveCount(1);
+
+    // Reusing id 0 must update that toast rather than open a second one, which
+    // it only can if custom() kept the id instead of falling back to a counter.
+    // The rendered content stays the custom jsx, matching upstream: create()'s
+    // update branch spreads the existing toast and nothing clears its `jsx`.
+    await page.getByTestId('replace-zero-id').click();
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(1);
+  });
+
+  test('dismissed toasts do not pile up in the history', async ({ page }) => {
+    await page.getByTestId('history-flood').click();
+    await expect(page.getByTestId('history-size')).toHaveText('100');
+  });
+
+  // Movement against a disallowed direction is dampened rather than blocked, so
+  // it never reaches the 45px distance threshold and the only thing that could
+  // ever dismiss it was the velocity check. Driving this through page.mouse is
+  // useless here: the round trips make the gesture far too slow to clear that
+  // threshold, so the assertion would hold even with the bug present. Dispatch
+  // the sequence inside the page instead, which is both instant and the closest
+  // thing to a real flick. setPointerCapture is stubbed because a synthetic
+  // pointerId is not an active pointer and it would otherwise throw.
+  const flick = async (page: Page, dy: number) => {
+    await page.getByTestId('hero-default-button').click();
+    await expect(page.locator('[data-sonner-toast]')).toBeVisible();
+
+    await page.evaluate((distance) => {
+      const toast = document.querySelector('[data-sonner-toast]')!;
+      Element.prototype.setPointerCapture = () => {};
+      Element.prototype.releasePointerCapture = () => {};
+
+      const box = toast.getBoundingClientRect();
+      const x = box.x + box.width / 2;
+      const y = box.y + box.height / 2;
+      const send = (type: string, clientY: number) => {
+        toast.dispatchEvent(
+          new PointerEvent(type, { bubbles: true, clientX: x, clientY, button: 0, pointerId: 1 }),
+        );
+      };
+
+      send('pointerdown', y);
+      send('pointermove', y + distance / 2);
+      send('pointermove', y + distance);
+      send('pointerup', y + distance);
+    }, dy);
+  };
+
+  test('a fast flick in a direction that is not allowed does not dismiss', async ({ page }) => {
+    // The Toaster defaults to bottom-right, so only 'bottom' and 'right' dismiss.
+    await flick(page, -200);
+    // A dismissed toast lingers in the DOM for the 200ms exit animation, so
+    // assert only once that window has passed.
+    await page.waitForTimeout(500);
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(1);
+  });
+
+  test('a fast flick in an allowed direction dismisses', async ({ page }) => {
+    await flick(page, 200);
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
   });
 });
