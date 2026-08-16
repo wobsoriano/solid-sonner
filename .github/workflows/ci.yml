@@ -16,11 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # Installs the vp the project already pins: with no version given, the
-      # action reads the vite-plus devDependency and resolves the range through
-      # pnpm-lock.yaml. It also provisions Node and pnpm and runs the install,
-      # replacing setup-node and pnpm/action-setup.
-      # Pinned to an exact tag on purpose: the moving v1 tag is frozen.
+      # Sets up vp, Node and pnpm and installs, replacing setup-node and
+      # pnpm/action-setup. The vp version is read from the vite-plus dependency.
+      # Exact tag on purpose: the moving v1 tag is frozen.
       - uses: voidzero-dev/setup-vp@v1.17.0
         with:
           node-version: '24'
@@ -28,7 +26,7 @@ jobs:
           run-install: |
             - args: ['--frozen-lockfile', '--prefer-offline']
 
-      # Formatting and linting, via oxfmt and oxlint.
+      # oxfmt and oxlint.
       - run: vp check
 
       - run: vp run typecheck

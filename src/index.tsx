@@ -40,10 +40,8 @@ import {
   isAction,
 } from './types';
 
-// Styles ship inside the bundle and are injected on import, the same way the
-// React original does it. The attribute keeps a second import from stacking a
-// duplicate tag; `./styles.css` is also exported for consumers who'd rather
-// bring their own.
+// Injected on import, the same way the React original ships them. The attribute
+// stops a second import stacking a duplicate tag.
 if (typeof document !== 'undefined' && !document.querySelector('style[data-sonner]')) {
   const styleTag = document.createElement('style');
   styleTag.setAttribute('data-sonner', '');

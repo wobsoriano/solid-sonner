@@ -9,12 +9,11 @@ export default defineConfig({
       platform: 'neutral',
       dts: true,
       plugins: [solid()],
-      // The `./styles.css` subpath export ships the stylesheet unprocessed, so
-      // consumers who opt out of the injected styles can import it themselves.
+      // Backs the `./styles.css` subpath export.
       copy: [{ from: 'src/styles.css', to: 'dist' }],
     },
     // JSX left untouched for the `solid` condition, so the consumer's Solid
-    // compiler can specialise it for their target (DOM, SSR, hydration).
+    // compiler can target DOM, SSR or hydration.
     {
       entry: ['src/index.tsx'],
       platform: 'neutral',

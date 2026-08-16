@@ -19,18 +19,15 @@ export default function Home() {
   const [closeButton, setCloseButton] = createSignal(false);
   const [toasterMounted, setToasterMounted] = createSignal(true);
 
-  // Unmounts the Toaster, runs `fire` while nothing is subscribed, then mounts
-  // it again, so the Playwright suite can check that toasts created before the
-  // Toaster subscribes are replayed.
+  // Runs `fire` while nothing is subscribed, so the suite can check that toasts
+  // created before the Toaster mounts are replayed.
   const remountToaster = (fire: () => void) => {
     setToasterMounted(false);
     fire();
     setToasterMounted(true);
   };
 
-  // The Playwright suite drives the library through this rather than through
-  // buttons, which keeps test-only sections off the deployed docs site. It
-  // renders nothing.
+  // Test hook for the Playwright suite, so the docs site needs no test-only UI.
   onMount(() => {
     Object.assign(window, { __sonnerTest: { toast, remountToaster } });
   });

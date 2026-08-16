@@ -16,9 +16,7 @@ let toastsCounter = 1;
 // limit are dropped so long-running apps don't hold on to them forever.
 const MAX_HISTORY_SIZE = 100;
 
-// A toast keeps the id it was given, otherwise it gets the next one from the
-// counter. `custom` needs the same id `create` would pick, as it hands it to
-// the JSX callback.
+// `custom` needs the same id `create` would pick, as it hands it to the JSX callback.
 function getToastId(data?: { id?: number | string }): number | string {
   return typeof data?.id === 'number' || (typeof data?.id === 'string' && data.id.length > 0)
     ? data.id
@@ -29,7 +27,6 @@ class Observer {
   subscribers: Array<(toast: ToastT | ToastToDismiss) => void>;
   toasts: Array<ToastT | ToastToDismiss>;
   dismissedToasts: Set<string | number>;
-  // Dismissals that have been requested but not handed to the subscribers yet
   private pendingDismissals: Map<string | number, number>;
 
   constructor() {
@@ -90,10 +87,9 @@ class Observer {
     const { message, ...rest } = data;
     const id = getToastId(data);
 
-    // A dismissal that hasn't reached the subscribers yet gets cancelled: the
-    // toast is still on screen, so this is an update of it rather than a new
-    // toast. Without this, creating a toast right after dismissing the same id
-    // would have the pending dismissal remove the toast that just got created.
+    // Cancel a dismissal that hasn't reached the subscribers yet: the toast is
+    // still on screen, so this updates it. Otherwise creating a toast right
+    // after dismissing the same id lets that dismissal remove the new one.
     const pendingDismissal = this.pendingDismissals.get(id);
     if (pendingDismissal !== undefined) {
       cancelAnimationFrame(pendingDismissal);

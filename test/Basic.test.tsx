@@ -4,8 +4,7 @@ import type { toast as toastApi } from '../src';
 
 declare global {
   interface Window {
-    // Exposed by the dev app purely so this suite can drive scenarios the docs
-    // UI has no buttons for. See dev/App.tsx.
+    // Set by dev/App.tsx so this suite can drive the library directly.
     __sonnerTest: {
       toast: typeof toastApi;
       remountToaster: (fire: () => void) => void;
@@ -134,9 +133,8 @@ test.describe('Basic functionality', () => {
   });
 });
 
-// Each of these covers a fix ported from upstream sonner#777. They drive the
-// library through the `__sonnerTest` hook the dev app exposes rather than
-// through UI, so the docs site needs no test-only sections.
+// Each of these covers a fix ported from upstream sonner#777, driven through
+// the `__sonnerTest` hook so the docs site needs no test-only UI.
 test.describe('Upstream regressions', () => {
   test('classNames.default is only applied to toasts without a type', async ({ page }) => {
     await page.evaluate(() => {
@@ -197,20 +195,15 @@ test.describe('Upstream regressions', () => {
     // Outlive the 200ms exit animation, so the id is genuinely free again.
     await page.waitForTimeout(400);
 
-    // Infinite duration on purpose: with the default 4s the toast would
-    // auto-close inside the retry window, and `toHaveCount(0)` would pass
-    // because the toast vanished rather than because the action was dropped.
+    // Infinite duration so auto-close can't stand in for the assertion below.
     await page.evaluate(() =>
       window.__sonnerTest.toast.success('no action', {
         id: 'reused',
         duration: Number.POSITIVE_INFINITY,
       }),
     );
-    // One atomic assertion on purpose. Asserting "toast is present" and "no
-    // action button" separately lets both pass at different moments: the
-    // recreated toast can flash up and then be removed again, so the first
-    // assertion catches it while present and the second passes once it is gone.
-    // Exact text covers both at once, and fails on the leaked "Undo" label.
+    // One assertion, not two: without the fix the toast flashes up and is
+    // removed again, so "is present" and "has no button" pass at different moments.
     await expect(page.locator('[data-sonner-toast]')).toHaveText('no action');
   });
 
@@ -275,10 +268,8 @@ test.describe('Upstream regressions', () => {
     );
     await expect(page.getByText('zero')).toHaveCount(1);
 
-    // Reusing id 0 must update that toast rather than open a second one, which
-    // it only can if custom() kept the id instead of falling back to a counter.
-    // The rendered content stays the custom node, matching upstream: create()'s
-    // update branch spreads the existing toast and nothing clears its `jsx`.
+    // Updates that toast rather than opening a second one only if custom() kept
+    // the id. Content stays the custom node: upstream's update branch keeps `jsx`.
     await page.evaluate(() => window.__sonnerTest.toast('replaced', { id: 0 }));
     await expect(page.locator('[data-sonner-toast]')).toHaveCount(1);
   });
@@ -294,17 +285,12 @@ test.describe('Upstream regressions', () => {
     expect(historySize).toBe(100);
   });
 
-  // Movement against a disallowed direction is dampened rather than blocked, so
-  // it never reaches the 45px distance threshold and the only thing that could
-  // ever dismiss it was the velocity check. Driving this through page.mouse is
-  // useless here: the round trips make the gesture far too slow to clear that
-  // threshold, so the assertion would hold even with the bug present. Dispatch
-  // the sequence inside the page instead, which is both instant and the closest
-  // thing to a real flick. setPointerCapture is stubbed because a synthetic
-  // pointerId is not an active pointer and it would otherwise throw.
+  // A disallowed direction is dampened below the 45px threshold, so velocity is
+  // the only thing that can dismiss it. page.mouse round trips are far too slow
+  // to reach that, which would make the test pass with the bug present, so the
+  // events are dispatched in-page. setPointerCapture throws on a synthetic id.
   const flick = async (page: Page, dy: number) => {
-    // Infinite duration so the only thing that can remove this toast is the
-    // gesture, not the auto-close timer.
+    // Infinite duration so only the gesture can remove it, not the timer.
     await page.evaluate(() =>
       window.__sonnerTest.toast('swipe me', { duration: Number.POSITIVE_INFINITY }),
     );
@@ -334,8 +320,7 @@ test.describe('Upstream regressions', () => {
   test('a fast flick in a direction that is not allowed does not dismiss', async ({ page }) => {
     // The Toaster defaults to bottom-right, so only 'bottom' and 'right' dismiss.
     await flick(page, -200);
-    // A dismissed toast lingers in the DOM for the 200ms exit animation, so
-    // assert only once that window has passed.
+    // A dismissed toast lingers for the 200ms exit animation.
     await page.waitForTimeout(500);
     await expect(page.locator('[data-sonner-toast]')).toHaveCount(1);
   });
