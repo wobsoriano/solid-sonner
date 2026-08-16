@@ -11,6 +11,17 @@ import { Usage } from './components/Usage';
 import { Other } from './components/Other';
 import { Regressions } from './components/Regressions';
 
+// The regression harness exists only to drive the Playwright suite, and this
+// app is what gets deployed as the docs site, so it stays hidden unless it is
+// explicitly asked for with `?regressions`. Note it cannot key off
+// `import.meta.env.DEV`: the plugin in vite.config.ts rewrites that to `true`
+// in production builds too.
+function regressionsRequested() {
+  if (typeof window === 'undefined') return false;
+
+  return new URLSearchParams(window.location.search).has('regressions');
+}
+
 export default function Home() {
   const [expand, setExpand] = createSignal(false);
   const [position, setPosition] = createSignal<
@@ -50,7 +61,9 @@ export default function Home() {
           <Position position={position()} setPosition={setPosition} />
           <ExpandModes expand={expand()} setExpand={setExpand} />
           <Other setCloseButton={setCloseButton} setRichColors={setRichColors} />
-          <Regressions remountToaster={remountToaster} />
+          <Show when={regressionsRequested()}>
+            <Regressions remountToaster={remountToaster} />
+          </Show>
         </div>
       </main>
       <Footer />

@@ -1,0 +1,8 @@
+version: 2
+updates:
+  # setup-vp is pinned to an exact tag (its moving v1 tag is frozen), so it
+  # needs Dependabot to stay current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

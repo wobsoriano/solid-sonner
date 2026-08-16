@@ -124,6 +124,12 @@ test.describe('Basic functionality', () => {
 
 // Each of these covers a fix ported from upstream sonner#777.
 test.describe('Upstream regressions', () => {
+  // The buttons backing these live behind `?regressions` so they stay out of
+  // the deployed docs site.
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/?regressions');
+  });
+
   test('classNames.default is only applied to toasts without a type', async ({ page }) => {
     await page.getByTestId('types-default').click();
     await expect(page.locator('[data-sonner-toast]').first()).toHaveClass(/toast-default/);
