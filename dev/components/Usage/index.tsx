@@ -1,11 +1,12 @@
-import { CodeBlock } from '../CodeBlock'
+import { CodeBlock } from '../CodeBlock';
 
 export function Usage() {
   return (
     <div>
       <h2>Usage</h2>
       <p>Render the toaster in the root of your app.</p>
-      <CodeBlock>{`import { Toaster, toast } from 'solid-sonner'
+      <CodeBlock>
+        {`import { Toaster, toast } from 'solid-sonner'
         
 function App() {
   return (
@@ -19,5 +20,5 @@ function App() {
 }`}
       </CodeBlock>
     </div>
-  )
+  );
 }

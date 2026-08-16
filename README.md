@@ -23,7 +23,7 @@ pnpm add solid-sonner
 ## Quick start
 
 ```tsx
-import { Toaster, toast } from 'solid-sonner'
+import { Toaster, toast } from 'solid-sonner';
 
 export default function App() {
   return (
@@ -31,7 +31,7 @@ export default function App() {
       <Toaster />
       <button onClick={() => toast('My first toast')}>Give me a toast</button>
     </div>
-  )
+  );
 }
 ```
 
@@ -47,12 +47,12 @@ Exports:
 ### Toast types
 
 ```tsx
-toast('Event has been created')
-toast.success('Event has been created')
-toast.info('Event has new information')
-toast.warning('Event has warning')
-toast.error('Event has not been created')
-toast.loading('Loading data')
+toast('Event has been created');
+toast.success('Event has been created');
+toast.info('Event has new information');
+toast.warning('Event has warning');
+toast.error('Event has not been created');
+toast.loading('Loading data');
 ```
 
 With description, icon, and actions:
@@ -68,7 +68,7 @@ toast('Event has been created', {
   cancel: {
     label: 'Cancel',
   },
-})
+});
 ```
 
 ### Promise toasts
@@ -76,9 +76,9 @@ toast('Event has been created', {
 ```tsx
 toast.promise(fetchData(), {
   loading: 'Loading...',
-  success: data => `${data.name} has been added!`,
+  success: (data) => `${data.name} has been added!`,
   error: 'Error',
-})
+});
 ```
 
 Extended results are supported too:
@@ -86,44 +86,44 @@ Extended results are supported too:
 ```tsx
 toast.promise(saveProject(), {
   loading: 'Saving...',
-  success: result => ({
+  success: (result) => ({
     message: 'Project saved',
     description: result.id,
   }),
-  error: error => ({
+  error: (error) => ({
     message: 'Save failed',
     description: String(error),
   }),
-})
+});
 ```
 
 ### Updating and dismissing
 
 ```tsx
-const id = toast('Uploading...', { duration: Number.POSITIVE_INFINITY })
+const id = toast('Uploading...', { duration: Number.POSITIVE_INFINITY });
 
-toast.success('Done', { id })
-toast.dismiss(id)
-toast.dismiss()
+toast.success('Done', { id });
+toast.dismiss(id);
+toast.dismiss();
 ```
 
 ### Headless custom toasts
 
 ```tsx
-toast.custom(id => (
+toast.custom((id) => (
   <div>
     Custom toast <button onClick={() => toast.dismiss(id)}>close</button>
   </div>
-))
+));
 ```
 
 ### Read current state
 
 ```tsx
-const { toasts } = useSonner()
+const { toasts } = useSonner();
 
-toast.getToasts()
-toast.getHistory()
+toast.getToasts();
+toast.getHistory();
 ```
 
 ## Toaster props
@@ -169,10 +169,10 @@ Legacy aliases from older `solid-sonner` versions still work for compatibility:
 <>
   <Toaster />
   <Toaster id="sidebar" position="top-left" />
-</>
+</>;
 
-toast('Global toast')
-toast('Sidebar toast', { toasterId: 'sidebar' })
+toast('Global toast');
+toast('Sidebar toast', { toasterId: 'sidebar' });
 ```
 
 ## Tailwind / unstyled mode

@@ -1,24 +1,31 @@
 {
   "name": "solid-sonner",
-  "type": "module",
   "version": "0.3.1",
   "private": false,
-  "packageManager": "pnpm@10.20.0",
   "description": "An opinionated toast component for Solid.",
-  "author": "Robert Soriano <sorianorobertc@gmail.com>",
-  "license": "MIT",
-  "contributors": [],
+  "keywords": [
+    "solid"
+  ],
   "homepage": "https://github.com/wobsoriano/solid-sonner#readme",
+  "bugs": {
+    "url": "https://github.com/wobsoriano/solid-sonner/issues"
+  },
+  "license": "MIT",
+  "author": "Robert Soriano <sorianorobertc@gmail.com>",
+  "contributors": [],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wobsoriano/solid-sonner.git"
   },
-  "bugs": {
-    "url": "https://github.com/wobsoriano/solid-sonner/issues"
-  },
-  "keywords": [
-    "solid"
+  "files": [
+    "dist"
   ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "browser": {},
+  "types": "./dist/index.d.ts",
+  "typesVersions": {},
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -27,14 +34,6 @@
     },
     "./styles.css": "./dist/styles.css"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "typesVersions": {},
-  "files": [
-    "dist"
-  ],
-  "browser": {},
   "scripts": {
     "dev": "vite serve dev",
     "build": "vp pack",
@@ -49,9 +48,6 @@
     "check": "vp check",
     "release": "changeset publish"
   },
-  "peerDependencies": {
-    "solid-js": "^1.6.0"
-  },
   "devDependencies": {
     "@changesets/cli": "^3.0.0",
     "@playwright/test": "^1.62.1",
@@ -64,5 +60,9 @@
     "vite": "^8.2.1",
     "vite-plugin-solid": "^2.11.14",
     "vite-plus": "^0.2.9"
-  }
+  },
+  "peerDependencies": {
+    "solid-js": "^1.6.0"
+  },
+  "packageManager": "pnpm@10.20.0"
 }

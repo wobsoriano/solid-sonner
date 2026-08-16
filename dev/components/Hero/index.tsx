@@ -1,6 +1,6 @@
-import { toast } from 'src/'
+import { toast } from 'src/';
 
-import styles from './hero.module.css'
+import styles from './hero.module.css';
 
 export function Hero() {
   return (
@@ -11,7 +11,10 @@ export function Hero() {
         <div class={styles.toast} />
       </div>
       <h1 class={styles.heading}>Solid Sonner</h1>
-      <p class={styles.heroDescription}>An opinionated toast component for Solid.<br /> A port of Emil Kowalski's Sonner</p>
+      <p class={styles.heroDescription}>
+        An opinionated toast component for Solid.
+        <br /> A port of Emil Kowalski's Sonner
+      </p>
       <div class={styles.buttons}>
         <button
           data-testid="hero-default-button"
@@ -19,7 +22,7 @@ export function Hero() {
           onClick={() => {
             toast('Sonner', {
               description: 'An opinionated toast component for Solid.',
-            })
+            });
           }}
           class={styles.button}
         >
@@ -30,5 +33,5 @@ export function Hero() {
         </a>
       </div>
     </div>
-  )
+  );
 }

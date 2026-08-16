@@ -1,6 +1,6 @@
-import { URL, fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
-import solidPlugin from 'vite-plugin-solid'
+import { URL, fileURLToPath } from 'node:url';
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
   plugins: [
@@ -8,8 +8,7 @@ export default defineConfig({
     {
       name: 'Replace env variables',
       transform(code, id) {
-        if (id.includes('node_modules'))
-          return code
+        if (id.includes('node_modules')) return code;
 
         return code
           .replace(/process\.env\.SSR/g, 'false')
@@ -19,7 +18,7 @@ export default defineConfig({
           .replace(/import\.meta\.env\.SSR/g, 'false')
           .replace(/import\.meta\.env\.DEV/g, 'true')
           .replace(/import\.meta\.env\.PROD/g, 'false')
-          .replace(/import\.meta\.env\.NODE_ENV/g, '"development"')
+          .replace(/import\.meta\.env\.NODE_ENV/g, '"development"');
       },
     },
   ],
@@ -30,8 +29,6 @@ export default defineConfig({
     target: 'esnext',
   },
   resolve: {
-    alias: [
-      { find: 'src/', replacement: fileURLToPath(new URL('../src', import.meta.url)) },
-    ],
+    alias: [{ find: 'src/', replacement: fileURLToPath(new URL('../src', import.meta.url)) }],
   },
-})
+});

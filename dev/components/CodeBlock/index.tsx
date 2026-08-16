@@ -1,14 +1,14 @@
-import hljs from 'highlight.js/lib/core'
-import javascript from 'highlight.js/lib/languages/javascript'
-import xml from 'highlight.js/lib/languages/xml'
-import 'highlight.js/styles/github.css'
-import type { Component } from 'solid-js'
-import { Show, createComputed, createMemo, createSignal, mergeProps, untrack } from 'solid-js'
-import copy from 'copy-to-clipboard'
-import styles from './code-block.module.css'
+import hljs from 'highlight.js/lib/core';
+import javascript from 'highlight.js/lib/languages/javascript';
+import xml from 'highlight.js/lib/languages/xml';
+import 'highlight.js/styles/github.css';
+import type { Component } from 'solid-js';
+import { Show, createComputed, createMemo, createSignal, mergeProps, untrack } from 'solid-js';
+import copy from 'copy-to-clipboard';
+import styles from './code-block.module.css';
 
-hljs.registerLanguage('javascript', javascript)
-hljs.registerLanguage('xml', xml)
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('xml', xml);
 
 function escapeHtml(value: string): string {
   return value
@@ -16,74 +16,77 @@ function escapeHtml(value: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
+    .replace(/'/g, '&#x27;');
 }
 
 interface Props {
-  autodetect?: boolean
-  language?: string
-  class?: string
-  ignoreIllegals?: false
-  children: string
+  autodetect?: boolean;
+  language?: string;
+  class?: string;
+  ignoreIllegals?: false;
+  children: string;
 }
 
 export const CodeBlock: Component<Props> = (props) => {
   /* eslint-disable solid/reactivity */
-  const propsWithDefaults = mergeProps({
-    language: '',
-    autodetect: true,
-    ignoreIllegals: true,
-  }, props)
+  const propsWithDefaults = mergeProps(
+    {
+      language: '',
+      autodetect: true,
+      ignoreIllegals: true,
+    },
+    props,
+  );
 
-  const [language, setLanguage] = createSignal(propsWithDefaults.language || '')
-  const [copying, setCopying] = createSignal(0)
+  const [language, setLanguage] = createSignal(propsWithDefaults.language || '');
+  const [copying, setCopying] = createSignal(0);
 
   createComputed(() => {
-    setLanguage(propsWithDefaults.language)
-  })
+    setLanguage(propsWithDefaults.language);
+  });
 
-  const autodetect = createMemo(() => props.autodetect || !language())
-  const cannotDetectLanguage = createMemo(() => !autodetect() && !hljs.getLanguage(language()))
+  const autodetect = createMemo(() => props.autodetect || !language());
+  const cannotDetectLanguage = createMemo(() => !autodetect() && !hljs.getLanguage(language()));
 
   const className = createMemo(() => {
-    if (cannotDetectLanguage())
-      return ''
+    if (cannotDetectLanguage()) return '';
 
-    return `hljs ${language()} ${props.class}`
-  })
+    return `hljs ${language()} ${props.class}`;
+  });
 
   const highlightedCode = createMemo(() => {
-    if (cannotDetectLanguage())
-      return escapeHtml(props.children)
+    if (cannotDetectLanguage()) return escapeHtml(props.children);
 
     if (autodetect()) {
-      const result = hljs.highlightAuto(props.children)
+      const result = hljs.highlightAuto(props.children);
       untrack(() => {
-        setLanguage(result.language ?? '')
-      })
-      return result.value
+        setLanguage(result.language ?? '');
+      });
+      return result.value;
     }
 
     const result = hljs.highlight(props.children, {
       language: language(),
       ignoreIllegals: props.ignoreIllegals,
-    })
-    return result.value
-  })
+    });
+    return result.value;
+  });
 
   const onCopy = () => {
-    copy(props.children).then((copied) => {
-      if (!copied)
-        return
+    copy(props.children).then(
+      (copied) => {
+        if (!copied) return;
 
-      setCopying(c => c + 1)
-      setTimeout(() => {
-        setCopying(c => c - 1)
-      }, 2000)
-    }, (error) => {
-      console.error(error)
-    })
-  }
+        setCopying((c) => c + 1);
+        setTimeout(() => {
+          setCopying((c) => c - 1);
+        }, 2000);
+      },
+      (error) => {
+        console.error(error);
+      },
+    );
+  };
 
   return (
     <div class={styles.outerWrapper}>
@@ -107,7 +110,7 @@ export const CodeBlock: Component<Props> = (props) => {
               </svg>
             </div>
           }
-          >
+        >
           <div>
             <svg
               viewBox="0 0 24 24"
@@ -134,5 +137,5 @@ export const CodeBlock: Component<Props> = (props) => {
         </div>
       </pre>
     </div>
-  )
-}
+  );
+};
