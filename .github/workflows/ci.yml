@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Lint
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Sets up vp, Node and pnpm and installs, replacing setup-node and
       # pnpm/action-setup. The vp version is read from the vite-plus dependency.
@@ -35,7 +35,7 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: voidzero-dev/setup-vp@v1.17.0
         with:
