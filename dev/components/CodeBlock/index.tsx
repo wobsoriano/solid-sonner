@@ -72,11 +72,17 @@ export const CodeBlock: Component<Props> = (props) => {
   })
 
   const onCopy = () => {
-    copy(props.children)
-    setCopying(c => c + 1)
-    setTimeout(() => {
-      setCopying(c => c - 1)
-    }, 2000)
+    copy(props.children).then((copied) => {
+      if (!copied)
+        return
+
+      setCopying(c => c + 1)
+      setTimeout(() => {
+        setCopying(c => c - 1)
+      }, 2000)
+    }, (error) => {
+      console.error(error)
+    })
   }
 
   return (

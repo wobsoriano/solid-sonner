@@ -5,7 +5,7 @@
  * Credits:
  * https://github.com/emilkowalski/sonner/blob/main/src/index.tsx
  */
-import './styles.css'
+import cssText from './styles.css?inline'
 import type { JSX } from 'solid-js'
 import { For, Show, createEffect, createMemo, createSignal, mergeProps, on, onCleanup, onMount } from 'solid-js'
 import { createStore, produce, reconcile } from 'solid-js/store'
@@ -29,6 +29,17 @@ import {
   type ToasterProps,
   isAction,
 } from './types'
+
+// Styles ship inside the bundle and are injected on import, the same way the
+// React original does it. The attribute keeps a second import from stacking a
+// duplicate tag; `./styles.css` is also exported for consumers who'd rather
+// bring their own.
+if (typeof document !== 'undefined' && !document.querySelector('style[data-sonner]')) {
+  const styleTag = document.createElement('style')
+  styleTag.setAttribute('data-sonner', '')
+  styleTag.textContent = cssText
+  document.head.appendChild(styleTag)
+}
 
 const VISIBLE_TOASTS_AMOUNT = 3
 const VIEWPORT_OFFSET = '24px'

@@ -7,11 +7,17 @@ export function Installation() {
   const [copying, setCopying] = createSignal(0)
 
   const onCopy = () => {
-    copy('npm install solid-sonner')
-    setCopying(c => c + 1)
-    setTimeout(() => {
-      setCopying(c => c - 1)
-    }, 2000)
+    copy('npm install solid-sonner').then((copied) => {
+      if (!copied)
+        return
+
+      setCopying(c => c + 1)
+      setTimeout(() => {
+        setCopying(c => c - 1)
+      }, 2000)
+    }, (error) => {
+      console.error(error)
+    })
   }
 
   return (
