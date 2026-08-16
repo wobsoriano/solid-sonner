@@ -1,5 +1,17 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
+import type { toast as toastApi } from '../src';
+
+declare global {
+  interface Window {
+    // Exposed by the dev app purely so this suite can drive scenarios the docs
+    // UI has no buttons for. See dev/App.tsx.
+    __sonnerTest: {
+      toast: typeof toastApi;
+      remountToaster: (fire: () => void) => void;
+    };
+  }
+}
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -122,86 +134,114 @@ test.describe('Basic functionality', () => {
   });
 });
 
-// Each of these covers a fix ported from upstream sonner#777.
+// Each of these covers a fix ported from upstream sonner#777. They drive the
+// library through the `__sonnerTest` hook the dev app exposes rather than
+// through UI, so the docs site needs no test-only sections.
 test.describe('Upstream regressions', () => {
-  // The buttons backing these live behind `?regressions` so they stay out of
-  // the deployed docs site.
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/?regressions');
-  });
-
   test('classNames.default is only applied to toasts without a type', async ({ page }) => {
-    await page.getByTestId('types-default').click();
-    await expect(page.locator('[data-sonner-toast]').first()).toHaveClass(/toast-default/);
+    await page.evaluate(() => {
+      const classNames = { default: 'is-default', success: 'is-success' };
+      window.__sonnerTest.toast('untyped', { classNames });
+      window.__sonnerTest.toast.success('typed', { classNames });
+    });
 
-    await page.getByTestId('types-success').click();
+    await expect(page.locator('[data-sonner-toast]:not([data-type])')).toHaveClass(/is-default/);
     const success = page.locator('[data-sonner-toast][data-type="success"]');
-    await expect(success).toHaveClass(/toast-success/);
-    await expect(success).not.toHaveClass(/toast-default/);
+    await expect(success).toHaveClass(/is-success/);
+    await expect(success).not.toHaveClass(/is-default/);
   });
 
   test('custom icon is only rendered once in a settled promise toast', async ({ page }) => {
-    await page.getByTestId('promise-custom-icon').click();
+    await page.evaluate(() => {
+      const icon = document.createElement('span');
+      icon.dataset.testid = 'custom-promise-icon';
+
+      window.__sonnerTest.toast.promise(() => new Promise((resolve) => setTimeout(resolve, 100)), {
+        loading: 'Loading...',
+        success: 'Settled',
+        icon,
+      });
+    });
+
     await expect(page.getByText('Settled')).toHaveCount(1);
     await expect(page.getByTestId('custom-promise-icon')).toHaveCount(1);
   });
 
   test('decorative icons are hidden from assistive technology', async ({ page }) => {
-    await page.getByTestId('types-success').click();
-    await expect(page.locator('[data-sonner-toast] [data-icon] svg').first()).toHaveAttribute(
-      'aria-hidden',
-      'true',
-    );
+    await page.evaluate(() => window.__sonnerTest.toast.success('typed', { closeButton: true }));
 
-    await page.getByTestId('other-close-button').click();
-    await expect(page.locator('[data-close-button] svg').first()).toHaveAttribute(
-      'aria-hidden',
-      'true',
-    );
+    await expect(page.locator('[data-icon] svg')).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.locator('[data-close-button] svg')).toHaveAttribute('aria-hidden', 'true');
   });
 
   test('toast created while the Toaster is unmounted is replayed on mount', async ({ page }) => {
-    await page.getByTestId('premount-toast').click();
-    await expect(page.getByText('Fired while unmounted')).toHaveCount(1);
+    await page.evaluate(() => {
+      const { toast, remountToaster } = window.__sonnerTest;
+      remountToaster(() => toast('fired while unmounted'));
+    });
+
+    await expect(page.getByText('fired while unmounted')).toHaveCount(1);
   });
 
   test('a new toast reusing a dismissed id does not inherit its props', async ({ page }) => {
-    await page.getByTestId('reused-id-with-action').click();
+    await page.evaluate(() =>
+      window.__sonnerTest.toast.success('has an action', {
+        id: 'reused',
+        action: { label: 'Undo', onClick: () => {} },
+      }),
+    );
     await expect(page.locator('[data-button]')).toHaveCount(1);
 
-    await page.getByTestId('reused-id-without-action').click();
-    await expect(page.getByText('No action')).toHaveCount(1);
+    await page.evaluate(() => window.__sonnerTest.toast.dismiss('reused'));
+    // Outlive the 200ms exit animation, so the id is genuinely free again.
+    await page.waitForTimeout(400);
+
+    await page.evaluate(() => window.__sonnerTest.toast.success('no action', { id: 'reused' }));
+    await expect(page.getByText('no action')).toHaveCount(1);
     await expect(page.locator('[data-button]')).toHaveCount(0);
   });
 
   test('toast recreated right after being dismissed stays on screen', async ({ page }) => {
-    await page.getByTestId('dismiss-and-recreate').click();
-    await expect(page.getByText('Recreated toast')).toHaveCount(1);
+    await page.evaluate(() => {
+      const { toast } = window.__sonnerTest;
+      const id = toast('recreated');
+      toast.dismiss(id);
+      toast('recreated', { id });
+    });
+
+    await expect(page.getByText('recreated')).toHaveCount(1);
     // Outlives the dismissal that was already in flight when it was created.
     await page.waitForTimeout(600);
-    await expect(page.getByText('Recreated toast')).toHaveCount(1);
+    await expect(page.getByText('recreated')).toHaveCount(1);
   });
 
   test('toast() clears the loading state of a toast with the same id', async ({ page }) => {
-    await page.getByTestId('loading-fixed-id').click();
+    await page.evaluate(() => window.__sonnerTest.toast.loading('loading...', { id: 'fixed' }));
     await expect(page.locator('[data-sonner-toast][data-type="loading"]')).toHaveCount(1);
 
-    await page.getByTestId('default-over-loading').click();
-    await expect(page.getByText('Plain now')).toHaveCount(1);
+    await page.evaluate(() => window.__sonnerTest.toast('plain now', { id: 'fixed' }));
+    await expect(page.getByText('plain now')).toHaveCount(1);
     await expect(page.locator('[data-sonner-toast][data-type="loading"]')).toHaveCount(0);
   });
 
   test('toast.custom() clears the loading state of a toast with the same id', async ({ page }) => {
-    await page.getByTestId('loading-fixed-id').click();
+    await page.evaluate(() => window.__sonnerTest.toast.loading('loading...', { id: 'fixed' }));
     await expect(page.locator('[data-sonner-toast][data-type="loading"]')).toHaveCount(1);
 
-    await page.getByTestId('custom-over-loading').click();
-    await expect(page.getByText('Custom now')).toHaveCount(1);
+    await page.evaluate(() =>
+      window.__sonnerTest.toast.custom(
+        // toast.custom takes a JSX.Element, which in Solid is a real DOM node.
+        () => Object.assign(document.createElement('div'), { textContent: 'custom now' }),
+        { id: 'fixed' },
+      ),
+    );
+    await expect(page.getByText('custom now')).toHaveCount(1);
     await expect(page.locator('[data-sonner-toast][data-type="loading"]')).toHaveCount(0);
   });
 
   test('content fills the toast rather than hugging its text', async ({ page }) => {
-    await page.getByTestId('short-content').click();
+    await page.evaluate(() => window.__sonnerTest.toast('Hi'));
+
     const toast = page.locator('[data-sonner-toast]').first();
     await expect(toast).toBeVisible();
 
@@ -214,20 +254,31 @@ test.describe('Upstream regressions', () => {
   });
 
   test('toast.custom() keeps an id of 0', async ({ page }) => {
-    await page.getByTestId('custom-zero-id').click();
-    await expect(page.getByText('Zero id toast')).toHaveCount(1);
+    await page.evaluate(() =>
+      window.__sonnerTest.toast.custom(
+        () => Object.assign(document.createElement('div'), { textContent: 'zero' }),
+        { id: 0 },
+      ),
+    );
+    await expect(page.getByText('zero')).toHaveCount(1);
 
     // Reusing id 0 must update that toast rather than open a second one, which
     // it only can if custom() kept the id instead of falling back to a counter.
-    // The rendered content stays the custom jsx, matching upstream: create()'s
+    // The rendered content stays the custom node, matching upstream: create()'s
     // update branch spreads the existing toast and nothing clears its `jsx`.
-    await page.getByTestId('replace-zero-id').click();
+    await page.evaluate(() => window.__sonnerTest.toast('replaced', { id: 0 }));
     await expect(page.locator('[data-sonner-toast]')).toHaveCount(1);
   });
 
   test('dismissed toasts do not pile up in the history', async ({ page }) => {
-    await page.getByTestId('history-flood').click();
-    await expect(page.getByTestId('history-size')).toHaveText('100');
+    const historySize = await page.evaluate(() => {
+      const { toast } = window.__sonnerTest;
+      for (let i = 0; i < 150; i++) toast.dismiss(toast(`flood ${i}`));
+
+      return toast.getHistory().length;
+    });
+
+    expect(historySize).toBe(100);
   });
 
   // Movement against a disallowed direction is dampened rather than blocked, so
@@ -239,7 +290,7 @@ test.describe('Upstream regressions', () => {
   // thing to a real flick. setPointerCapture is stubbed because a synthetic
   // pointerId is not an active pointer and it would otherwise throw.
   const flick = async (page: Page, dy: number) => {
-    await page.getByTestId('hero-default-button').click();
+    await page.evaluate(() => window.__sonnerTest.toast('swipe me'));
     await expect(page.locator('[data-sonner-toast]')).toBeVisible();
 
     await page.evaluate((distance) => {
