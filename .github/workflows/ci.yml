@@ -27,7 +27,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
-      - run: pnpm lint
+      # Formatting and linting, via oxfmt and oxlint.
+      - run: pnpm check
+
+      - run: pnpm typecheck
 
   Playwright:
     timeout-minutes: 60
