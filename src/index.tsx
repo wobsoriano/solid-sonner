@@ -56,6 +56,17 @@ const GAP = 14;
 const SWIPE_THRESHOLD = 45;
 const TIME_BEFORE_UNMOUNT = 200;
 
+/**
+ * Solid 2 renders a boolean attribute value as a valueless attribute
+ * (`data-styled=""`) and omits it entirely when false, but the stylesheet
+ * selects on `[data-styled='true']` and `[data-front='false']`. Booleans have
+ * to reach the DOM as strings. `undefined` still omits the attribute, matching
+ * the React original.
+ */
+function boolAttr(value: boolean | undefined) {
+  return value === undefined ? undefined : String(value);
+}
+
 function cn(...classes: Array<string | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
@@ -151,7 +162,10 @@ function Toast(props: ToastProps) {
   const [swiping, setSwiping] = createSignal(false);
   const [swipeOut, setSwipeOut] = createSignal(false);
   const [isSwiped, setIsSwiped] = createSignal(false);
-  const [swipeDirection, setSwipeDirection] = createSignal<'x' | 'y' | null>(null);
+  // Plain variables, not signals: these are per-gesture state read back inside
+  // the same gesture and never rendered. As signals, Solid 2's batching meant a
+  // pointerdown write was not visible to the pointermove that followed it.
+  let swipeDirection: 'x' | 'y' | null = null;
   const [swipeOutDirection, setSwipeOutDirection] = createSignal<
     'left' | 'right' | 'up' | 'down' | null
   >(null);
@@ -162,7 +176,7 @@ function Toast(props: ToastProps) {
   let closeTimerStartTimeRef = 0;
   let lastCloseTimerStartTimeRef = 0;
   let remainingTime = TOAST_LIFETIME;
-  const [pointerStartRef, setPointerStartRef] = createSignal<{ x: number; y: number } | null>(null);
+  let pointerStart: { x: number; y: number } | null = null;
 
   const isFront = () => props.index === 0;
   const isVisible = () => props.index + 1 <= props.visibleToasts;
@@ -379,24 +393,24 @@ function Toast(props: ToastProps) {
         toastClassNames()?.[toastTypeKey()],
       )}
       data-sonner-toast=""
-      data-rich-colors={props.toast.richColors ?? props.defaultRichColors}
-      data-styled={!(props.toast.jsx || props.toast.unstyled || props.unstyled)}
-      data-mounted={mounted()}
-      data-promise={Boolean(props.toast.promise)}
-      data-swiped={isSwiped()}
-      data-removed={removed()}
-      data-visible={isVisible()}
+      data-rich-colors={boolAttr(props.toast.richColors ?? props.defaultRichColors)}
+      data-styled={boolAttr(!(props.toast.jsx || props.toast.unstyled || props.unstyled))}
+      data-mounted={boolAttr(mounted())}
+      data-promise={boolAttr(Boolean(props.toast.promise))}
+      data-swiped={boolAttr(isSwiped())}
+      data-removed={boolAttr(removed())}
+      data-visible={boolAttr(isVisible())}
       data-y-position={y()}
       data-x-position={x()}
       data-index={props.index}
-      data-front={isFront()}
-      data-swiping={swiping()}
-      data-dismissible={dismissible()}
+      data-front={boolAttr(isFront())}
+      data-swiping={boolAttr(swiping())}
+      data-dismissible={boolAttr(dismissible())}
       data-type={toastType()}
-      data-invert={invert()}
-      data-swipe-out={swipeOut()}
+      data-invert={boolAttr(invert())}
+      data-swipe-out={boolAttr(swipeOut())}
       data-swipe-direction={swipeOutDirection()}
-      data-expanded={Boolean(props.expanded || (props.expandByDefault && mounted()))}
+      data-expanded={boolAttr(Boolean(props.expanded || (props.expandByDefault && mounted())))}
       data-testid={props.toast.testId}
       style={{
         '--index': props.index,
@@ -409,8 +423,8 @@ function Toast(props: ToastProps) {
       }}
       onDragEnd={() => {
         setSwiping(false);
-        setSwipeDirection(null);
-        setPointerStartRef(null);
+        swipeDirection = null;
+        pointerStart = null;
       }}
       onPointerDown={(event) => {
         if (event.button === 2) return;
@@ -420,12 +434,12 @@ function Toast(props: ToastProps) {
         setOffsetBeforeRemove(offset());
         event.currentTarget.setPointerCapture(event.pointerId);
         setSwiping(true);
-        setPointerStartRef({ x: event.clientX, y: event.clientY });
+        pointerStart = { x: event.clientX, y: event.clientY };
       }}
       onPointerUp={() => {
         if (swipeOut() || !dismissible()) return;
 
-        setPointerStartRef(null);
+        pointerStart = null;
 
         const swipeAmountX = Number(
           toastRef?.style.getPropertyValue('--swipe-amount-x').replace('px', '') || 0,
@@ -434,14 +448,14 @@ function Toast(props: ToastProps) {
           toastRef?.style.getPropertyValue('--swipe-amount-y').replace('px', '') || 0,
         );
         const timeTaken = Math.max(1, new Date().getTime() - (dragStartTime?.getTime() ?? 0));
-        const swipeAmount = swipeDirection() === 'x' ? swipeAmountX : swipeAmountY;
+        const swipeAmount = swipeDirection === 'x' ? swipeAmountX : swipeAmountY;
         const velocity = Math.abs(swipeAmount) / timeTaken;
 
         // Movement towards a direction that isn't allowed is dampened, not
         // blocked, so a fast flick can still pass the velocity check. Only
         // dismiss if the direction is allowed.
         const isAllowedDirection =
-          swipeDirection() === 'x'
+          swipeDirection === 'x'
             ? swipeDirections().includes(swipeAmountX > 0 ? 'right' : 'left')
             : swipeDirections().includes(swipeAmountY > 0 ? 'bottom' : 'top');
 
@@ -449,7 +463,7 @@ function Toast(props: ToastProps) {
           setOffsetBeforeRemove(offset());
           props.toast.onDismiss?.(props.toast);
 
-          if (swipeDirection() === 'x') setSwipeOutDirection(swipeAmountX > 0 ? 'right' : 'left');
+          if (swipeDirection === 'x') setSwipeOutDirection(swipeAmountX > 0 ? 'right' : 'left');
           else setSwipeOutDirection(swipeAmountY > 0 ? 'down' : 'up');
 
           deleteToast();
@@ -461,18 +475,18 @@ function Toast(props: ToastProps) {
         toastRef?.style.setProperty('--swipe-amount-y', '0px');
         setIsSwiped(false);
         setSwiping(false);
-        setSwipeDirection(null);
+        swipeDirection = null;
       }}
       onPointerMove={(event) => {
-        if (!pointerStartRef() || !dismissible()) return;
+        if (!pointerStart || !dismissible()) return;
 
         if ((window.getSelection()?.toString().length ?? 0) > 0) return;
 
-        const yDelta = event.clientY - pointerStartRef()!.y;
-        const xDelta = event.clientX - pointerStartRef()!.x;
+        const yDelta = event.clientY - pointerStart.y;
+        const xDelta = event.clientX - pointerStart.x;
 
-        if (!swipeDirection() && (Math.abs(xDelta) > 1 || Math.abs(yDelta) > 1))
-          setSwipeDirection(Math.abs(xDelta) > Math.abs(yDelta) ? 'x' : 'y');
+        if (!swipeDirection && (Math.abs(xDelta) > 1 || Math.abs(yDelta) > 1))
+          swipeDirection = Math.abs(xDelta) > Math.abs(yDelta) ? 'x' : 'y';
 
         const swipeAmount = { x: 0, y: 0 };
 
@@ -481,7 +495,7 @@ function Toast(props: ToastProps) {
           return 1 / (1.5 + factor);
         };
 
-        if (swipeDirection() === 'y') {
+        if (swipeDirection === 'y') {
           if (swipeDirections().includes('top') || swipeDirections().includes('bottom')) {
             if (
               (swipeDirections().includes('top') && yDelta < 0) ||
@@ -494,7 +508,7 @@ function Toast(props: ToastProps) {
               swipeAmount.y = Math.abs(dampenedDelta) < Math.abs(yDelta) ? dampenedDelta : yDelta;
             }
           }
-        } else if (swipeDirection() === 'x') {
+        } else if (swipeDirection === 'x') {
           if (swipeDirections().includes('left') || swipeDirections().includes('right')) {
             if (
               (swipeDirections().includes('left') && xDelta < 0) ||
@@ -518,7 +532,7 @@ function Toast(props: ToastProps) {
       <Show when={closeButton() && !props.toast.jsx && toastType() !== 'loading'}>
         <button
           aria-label={props.closeButtonAriaLabel ?? 'Close toast'}
-          data-disabled={disabled()}
+          data-disabled={boolAttr(disabled())}
           data-close-button
           onPointerDown={(event) => event.stopPropagation()}
           onPointerUp={(event) => event.stopPropagation()}
