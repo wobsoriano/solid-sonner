@@ -10,3 +10,6 @@ tsup.config.bundled_*.{m,c,}s
 /playwright/.cache/
 .agents/
 skills-lock.json
+
+# vite-plus generated hook dispatcher
+.vite-hooks/_
