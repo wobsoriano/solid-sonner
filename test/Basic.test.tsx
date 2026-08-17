@@ -274,15 +274,16 @@ test.describe('Upstream regressions', () => {
     await expect(page.locator('[data-sonner-toast]')).toHaveCount(1);
   });
 
-  test('dismissed toasts do not pile up in the history', async ({ page }) => {
-    const historySize = await page.evaluate(() => {
+  test('dismissed toasts do not pile up in state', async ({ page }) => {
+    // There is no separate history array any more, so a dismissed toast is
+    // spliced out of the live store rather than trimmed later (sonner#729).
+    await page.evaluate(() => {
       const { toast } = window.__sonnerTest;
       for (let i = 0; i < 150; i++) toast.dismiss(toast(`flood ${i}`));
-
-      return toast.getHistory().length;
     });
 
-    expect(historySize).toBe(100);
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
+    expect(await page.evaluate(() => window.__sonnerTest.toast.toasts.length)).toBe(0);
   });
 
   // A disallowed direction is dampened below the 45px threshold, so velocity is
