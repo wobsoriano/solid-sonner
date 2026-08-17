@@ -83,11 +83,11 @@ export interface ToastT {
   dismissible?: boolean;
   description?: ToastContent;
   duration?: number;
-  delete?: boolean;
-  /** Set when the toast is on its way out, so `create` treats an id reuse as a new toast. */
+  /**
+   * Internal. Set while the toast is on its way out, so `create` treats a reuse
+   * of its id as a new toast rather than merging into the old one.
+   */
   dismiss?: boolean;
-  /** Makes a still-mounted toast reset its auto-close timer after a revive. */
-  updated?: boolean;
   action?: Action | JSX.Element;
   cancel?: Action | JSX.Element;
   onDismiss?: (toast: ToastT) => void;
@@ -222,7 +222,10 @@ export enum SwipeStateTypes {
 
 export type Theme = 'light' | 'dark';
 
-export type ExternalToast = Omit<ToastT, 'id' | 'type' | 'title' | 'jsx' | 'delete' | 'promise'> & {
+export type ExternalToast = Omit<
+  ToastT,
+  'id' | 'type' | 'title' | 'jsx' | 'dismiss' | 'promise'
+> & {
   id?: number | string;
   toasterId?: string;
 };

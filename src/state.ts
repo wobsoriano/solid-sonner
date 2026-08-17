@@ -58,8 +58,6 @@ export function updateToast({ id, data, type, message, dismissible }: UpdateToas
       // A dismissal that hasn't been processed yet gets cancelled: the toast
       // is still on screen, so this is an update of it, not a new toast.
       dismiss: false,
-      delete: false,
-      updated: true,
     });
   });
 }
@@ -75,7 +73,6 @@ export function markDismissed(id: number | string): void {
     if (!entry) return;
 
     entry.dismiss = true;
-    entry.delete = true;
   });
 }
 
@@ -119,13 +116,13 @@ export function create(
 
     const existing = toasts.find((toast) => toast.id === id);
 
-    if (existing?.dismiss || existing?.delete) {
+    if (existing?.dismiss) {
       // The previous toast with this id is gone, so this is a brand new one.
       // Drop the old instead of merging, otherwise its props (e.g. `action`)
-      // leak into the new toast. `updated` makes a still-mounted component
-      // reset its auto-close timer.
+      // leak into the new toast. The fresh object also gives `For` a new
+      // identity, so the replacement mounts with a fresh auto-close timer.
       remove(id);
-      addToast({ ...rest, id, title: message, dismissible, type, updated: true });
+      addToast({ ...rest, id, title: message, dismissible, type });
     } else if (existing) {
       updateToast({ id, data, type, message, dismissible });
     } else {
