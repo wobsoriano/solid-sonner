@@ -57,11 +57,9 @@ const SWIPE_THRESHOLD = 45;
 const TIME_BEFORE_UNMOUNT = 200;
 
 /**
- * Solid 2 renders a boolean attribute value as a valueless attribute
- * (`data-styled=""`) and omits it entirely when false, but the stylesheet
- * selects on `[data-styled='true']` and `[data-front='false']`. Booleans have
- * to reach the DOM as strings. `undefined` still omits the attribute, matching
- * the React original.
+ * Solid 2 renders `true` as a valueless attribute and omits `false`, but the
+ * stylesheet selects on `[data-styled='true']` and `[data-front='false']`.
+ * `undefined` still omits, matching the React original.
  */
 function boolAttr(value: boolean | undefined) {
   return value === undefined ? undefined : String(value);
@@ -162,9 +160,8 @@ function Toast(props: ToastProps) {
   const [swiping, setSwiping] = createSignal(false);
   const [swipeOut, setSwipeOut] = createSignal(false);
   const [isSwiped, setIsSwiped] = createSignal(false);
-  // Plain variables, not signals: these are per-gesture state read back inside
-  // the same gesture and never rendered. As signals, Solid 2's batching meant a
-  // pointerdown write was not visible to the pointermove that followed it.
+  // Not signals: per-gesture state, never rendered. As signals, Solid 2's
+  // batching hid the pointerdown write from the pointermove after it.
   let swipeDirection: 'x' | 'y' | null = null;
   const [swipeOutDirection, setSwipeOutDirection] = createSignal<
     'left' | 'right' | 'up' | 'down' | null
@@ -223,9 +220,8 @@ function Toast(props: ToastProps) {
   );
 
   /**
-   * `markState` is false when the state already flagged this toast, which is
-   * the case when the dismissal came from `toast.dismiss()`. Writing the store
-   * again from inside that effect would be a write in an owned scope.
+   * `markState` is false when `toast.dismiss()` already flagged this toast.
+   * Re-marking it from that effect would be a write inside an owned scope.
    */
   function deleteToast(markState = true) {
     setRemoved(true);
@@ -314,8 +310,6 @@ function Toast(props: ToastProps) {
     },
   );
 
-  // Split effect: the compute phase is the dependency declaration, which is what
-  // `on(...)` did in Solid 1. Cleanup is returned from the apply phase.
   createEffect(
     () =>
       [
@@ -356,7 +350,6 @@ function Toast(props: ToastProps) {
         }, remainingTime);
       };
 
-      // Everything read here comes from the compute phase: apply does not track.
       const shouldPause = expanded || interacting || (pauseWhenHidden && documentHidden);
 
       if (shouldPause) pauseTimer();
@@ -672,8 +665,7 @@ function Toaster(props: ToasterProps) {
       ]),
     );
   });
-  // `ownedWrite` because each Toast measures itself and writes its height from
-  // an effect, which Solid 2 otherwise flags as a write inside an owned scope.
+  // `ownedWrite`: each Toast measures itself and writes its height from an effect.
   const [heights, setHeights] = createSignal<HeightT[]>([], { ownedWrite: true });
   const [expanded, setExpanded] = createSignal(false);
   const [interacting, setInteracting] = createSignal(false);

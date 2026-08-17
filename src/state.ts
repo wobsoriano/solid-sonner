@@ -28,9 +28,8 @@ interface UpdateToastProps {
 }
 
 /**
- * The store is the source of truth. Components read `toasts` directly, so there
- * is no subscriber list, no publish, and no second copy of the array inside the
- * Toaster.
+ * The source of truth. Components read `toasts` directly, so there is no
+ * subscriber list, no publish, and no second copy inside the Toaster.
  */
 const [toasts, setToasts] = createStore<ToastT[]>([]);
 export { toasts };
@@ -117,10 +116,9 @@ export function create(
     const existing = toasts.find((toast) => toast.id === id);
 
     if (existing?.dismiss) {
-      // The previous toast with this id is gone, so this is a brand new one.
       // Drop the old instead of merging, otherwise its props (e.g. `action`)
-      // leak into the new toast. The fresh object also gives `For` a new
-      // identity, so the replacement mounts with a fresh auto-close timer.
+      // leak in. The fresh object also gives `For` a new identity, so the
+      // replacement mounts with a fresh auto-close timer.
       remove(id);
       addToast({ ...rest, id, title: message, dismissible, type });
     } else if (existing) {
@@ -130,8 +128,7 @@ export function create(
     }
   });
 
-  // Solid 2 batches writes, so without this neither the caller nor a Toaster
-  // that hasn't rendered yet would see the toast.
+  // Solid 2 batches writes: without this the caller would not see the toast.
   flush();
 
   return id;
@@ -216,8 +213,7 @@ export function promise<ToastData>(promise: PromiseT<ToastData>, data?: PromiseD
   let shouldDismiss = id !== undefined;
   let result: ['resolve', ToastData] | ['reject', unknown];
 
-  // Resolves the `success` / `error` shorthand into toast settings. Upstream
-  // repeats this four times; it is the same shape every time.
+  // Resolves the `success` / `error` shorthand into toast settings.
   const settle = async (
     type: ToastTypes,
     value: unknown,
