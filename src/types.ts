@@ -1,4 +1,4 @@
-import type { JSX, Setter } from 'solid-js';
+import type { JSX } from '@solidjs/web';
 
 export type ToastTypes =
   | 'normal'
@@ -84,6 +84,10 @@ export interface ToastT {
   description?: ToastContent;
   duration?: number;
   delete?: boolean;
+  /** Set when the toast is on its way out, so `create` treats an id reuse as a new toast. */
+  dismiss?: boolean;
+  /** Makes a still-mounted toast reset its auto-close timer after a revive. */
+  updated?: boolean;
   action?: Action | JSX.Element;
   cancel?: Action | JSX.Element;
   onDismiss?: (toast: ToastT) => void;
@@ -185,7 +189,7 @@ export interface ToastProps {
   expanded: boolean;
   invert: boolean;
   heights: HeightT[];
-  setHeights: Setter<HeightT[]>;
+  setHeights: (fn: (heights: HeightT[]) => HeightT[] | void) => void;
   removeToast: (toast: ToastT) => void;
   gap?: number;
   position: Position;
@@ -217,11 +221,6 @@ export enum SwipeStateTypes {
 }
 
 export type Theme = 'light' | 'dark';
-
-export interface ToastToDismiss {
-  id: number | string;
-  dismiss: boolean;
-}
 
 export type ExternalToast = Omit<ToastT, 'id' | 'type' | 'title' | 'jsx' | 'delete' | 'promise'> & {
   id?: number | string;

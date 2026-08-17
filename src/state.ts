@@ -1,20 +1,16 @@
-import type { JSX } from 'solid-js';
-import {
-  type ExternalToast,
-  type PromiseData,
-  type PromiseIExtendedResult,
-  type PromiseT,
-  type ToastContent,
-  type ToastT,
-  type ToastToDismiss,
-  type ToastTypes,
+import { createStore, flush, untrack } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import type {
+  ExternalToast,
+  PromiseData,
+  PromiseIExtendedResult,
+  PromiseT,
+  ToastContent,
+  ToastT,
+  ToastTypes,
 } from './types';
 
 let toastsCounter = 1;
-
-// Amount of toasts kept in `toast.getHistory()`. Dismissed toasts above this
-// limit are dropped so long-running apps don't hold on to them forever.
-const MAX_HISTORY_SIZE = 100;
 
 // `custom` needs the same id `create` would pick, as it hands it to the JSX callback.
 function getToastId(data?: { id?: number | string }): number | string {
@@ -23,57 +19,101 @@ function getToastId(data?: { id?: number | string }): number | string {
     : toastsCounter++;
 }
 
-class Observer {
-  subscribers: Array<(toast: ToastT | ToastToDismiss) => void>;
-  toasts: Array<ToastT | ToastToDismiss>;
-  dismissedToasts: Set<string | number>;
-  private pendingDismissals: Map<string | number, number>;
+interface UpdateToastProps {
+  id: number | string;
+  data: Partial<ToastT>;
+  type: ToastTypes | undefined;
+  message: ToastContent | undefined;
+  dismissible: boolean;
+}
+
+/**
+ * The store is the source of truth. Components read `toastState.toasts`
+ * directly, so there is no subscriber list, no publish, and no second copy of
+ * the array inside the Toaster.
+ */
+class ToastState {
+  // Solid's store is read-only, so the array is exposed through a getter and
+  // every mutation goes through the setter.
+  #toasts;
+  #setToasts;
+  // Removals whose exit animation is running but whose entry isn't gone yet
+  #pendingRemovals = new Map<number | string, ReturnType<typeof setTimeout>>();
 
   constructor() {
-    this.subscribers = [];
-    this.toasts = [];
-    this.dismissedToasts = new Set();
-    this.pendingDismissals = new Map();
+    const [toasts, setToasts] = createStore<ToastT[]>([]);
+    this.#toasts = toasts;
+    this.#setToasts = setToasts;
   }
 
-  subscribe = (subscriber: (toast: ToastT | ToastToDismiss) => void) => {
-    this.subscribers.push(subscriber);
+  /** Reactive. Read it in JSX and it tracks. */
+  get toasts() {
+    return this.#toasts;
+  }
 
-    // A toast can be created before the `Toaster` had a chance to subscribe,
-    // e.g. when it's called above the `Toaster` in the tree. Replay whatever
-    // is still active so it doesn't get lost.
-    this.getActiveToasts().forEach((toast) => subscriber(toast));
-
-    return () => {
-      const index = this.subscribers.indexOf(subscriber);
-      this.subscribers.splice(index, 1);
-    };
+  #findToastIdx = (id: number | string): number | null => {
+    const idx = this.#toasts.findIndex((toast) => toast.id === id);
+    return idx === -1 ? null : idx;
   };
 
-  publish = (data: ToastT) => {
-    this.subscribers.forEach((subscriber) => subscriber(data));
-  };
-
-  addToast = (data: ToastT) => {
-    this.publish(data);
-    this.toasts = [...this.toasts, data];
-    this.trimHistory();
-  };
-
-  // Keeps the history bounded without ever dropping a toast that's still on screen.
-  private trimHistory = () => {
-    let toRemove = this.toasts.length - MAX_HISTORY_SIZE;
-    if (toRemove <= 0) return;
-
-    this.toasts = this.toasts.filter((toast) => {
-      if (toRemove > 0 && this.dismissedToasts.has(toast.id)) {
-        this.dismissedToasts.delete(toast.id);
-        toRemove--;
-        return false;
-      }
-
-      return true;
+  addToast = (data: ToastT): void => {
+    this.#setToasts((list) => {
+      list.unshift(data);
     });
+  };
+
+  updateToast = ({ id, data, type, message, dismissible }: UpdateToastProps): void => {
+    this.#setToasts((list) => {
+      const entry = list.find((toast) => toast.id === id);
+      if (!entry) return;
+
+      Object.assign(entry, {
+        ...data,
+        id,
+        title: message,
+        type,
+        dismissible,
+        // A dismissal that hasn't been processed yet gets cancelled: the toast
+        // is still on screen, so this is an update of it, not a new toast.
+        dismiss: false,
+        delete: false,
+        updated: true,
+      });
+    });
+  };
+
+  /**
+   * Flags a toast dismissed from inside the Toast component (close button,
+   * swipe, action click, auto-close) so `create` treats an id reuse as a new
+   * toast instead of merging the old props into it.
+   */
+  markDismissed = (id: number | string): void => {
+    this.#setToasts((list) => {
+      const entry = list.find((toast) => toast.id === id);
+      if (!entry) return;
+
+      entry.dismiss = true;
+      entry.delete = true;
+    });
+  };
+
+  scheduleRemoval = (id: number | string, delay: number): void => {
+    this.cancelRemoval(id);
+    this.#pendingRemovals.set(
+      id,
+      setTimeout(() => {
+        this.#pendingRemovals.delete(id);
+        this.remove(id);
+      }, delay),
+    );
+  };
+
+  cancelRemoval = (id: number | string): void => {
+    const timeout = this.#pendingRemovals.get(id);
+    if (timeout === undefined) return;
+
+    clearTimeout(timeout);
+    this.#pendingRemovals.delete(id);
   };
 
   create = (
@@ -83,83 +123,71 @@ class Observer {
       promise?: PromiseT;
       jsx?: JSX.Element;
     },
-  ) => {
+  ): number | string => {
     const { message, ...rest } = data;
     const id = getToastId(data);
+    const dismissible = data.dismissible ?? true;
+    const type = data.type;
 
-    // Cancel a dismissal that hasn't reached the subscribers yet: the toast is
-    // still on screen, so this updates it. Otherwise creating a toast right
-    // after dismissing the same id lets that dismissal remove the new one.
-    const pendingDismissal = this.pendingDismissals.get(id);
-    if (pendingDismissal !== undefined) {
-      cancelAnimationFrame(pendingDismissal);
-      this.pendingDismissals.delete(id);
-      this.dismissedToasts.delete(id);
-    }
+    // Reads here are bookkeeping, not dependencies.
+    untrack(() => {
+      // A removal that hasn't run yet gets cancelled: this create supersedes
+      // it, otherwise the old toast's timeout would remove the new one.
+      this.cancelRemoval(id);
 
-    const wasDismissed = this.dismissedToasts.has(id);
-    const dismissible = data.dismissible === undefined ? true : data.dismissible;
+      const idx = this.#findToastIdx(id);
+      const existing = idx === null ? undefined : this.#toasts[idx];
 
-    if (wasDismissed) {
-      this.dismissedToasts.delete(id);
-      // The previous toast with this id is gone, so this is a brand new toast.
-      // Drop the old one instead of merging into it, otherwise its props (e.g.
-      // `action`) leak into the new one.
-      this.toasts = this.toasts.filter((toast) => toast.id !== id);
-    }
+      if (existing?.dismiss || existing?.delete) {
+        // The previous toast with this id is gone, so this is a brand new one.
+        // Drop the old instead of merging, otherwise its props (e.g. `action`)
+        // leak into the new toast. `updated` makes a still-mounted component
+        // reset its auto-close timer.
+        this.remove(id);
+        this.addToast({ ...rest, id, title: message, dismissible, type, updated: true });
+      } else if (existing) {
+        this.updateToast({ id, data, type, message, dismissible });
+      } else {
+        this.addToast({ ...rest, id, title: message, dismissible, type });
+      }
+    });
 
-    const alreadyExists = wasDismissed
-      ? undefined
-      : this.toasts.find((toast) => {
-          return toast.id === id;
-        });
-
-    if (alreadyExists) {
-      this.toasts = this.toasts.map((toast) => {
-        if (toast.id === id) {
-          this.publish({ ...toast, ...data, id, title: message, dismissible } as ToastT);
-          return {
-            ...toast,
-            ...data,
-            id,
-            dismissible,
-            title: message,
-          };
-        }
-
-        return toast;
-      });
-    } else {
-      this.addToast({ title: message, ...rest, dismissible, id });
-    }
+    // Solid 2 batches writes, so without this neither the caller nor a Toaster
+    // that hasn't rendered yet would see the toast.
+    flush();
 
     return id;
   };
 
-  dismiss = (id?: number | string) => {
-    if (id === undefined || id === null) {
-      this.getActiveToasts().forEach((toast) => {
-        this.dismissedToasts.add(toast.id);
-        this.subscribers.forEach((subscriber) => subscriber({ id: toast.id, dismiss: true }));
+  dismiss = (id?: number | string): number | string | undefined => {
+    untrack(() => {
+      if (id === undefined || id === null) {
+        this.#setToasts((list) => {
+          list.forEach((toast) => {
+            toast.dismiss = true;
+          });
+        });
+        return;
+      }
+
+      this.#setToasts((list) => {
+        const entry = list.find((toast) => toast.id === id);
+        if (entry) entry.dismiss = true;
       });
+    });
+    flush();
 
-      return id;
+    return id;
+  };
+
+  remove = (id?: number | string): number | string | undefined => {
+    if (id === undefined) {
+      this.#setToasts(() => []);
+      return;
     }
 
-    this.dismissedToasts.add(id);
-
-    const alreadyPending = this.pendingDismissals.get(id);
-    if (alreadyPending !== undefined) {
-      cancelAnimationFrame(alreadyPending);
-    }
-
-    this.pendingDismissals.set(
-      id,
-      requestAnimationFrame(() => {
-        this.pendingDismissals.delete(id);
-        this.subscribers.forEach((subscriber) => subscriber({ id, dismiss: true }));
-      }),
-    );
+    this.cancelRemoval(id);
+    this.#setToasts((list) => list.filter((toast) => toast.id !== id));
 
     return id;
   };
@@ -210,6 +238,28 @@ class Observer {
     let shouldDismiss = id !== undefined;
     let result: ['resolve', ToastData] | ['reject', unknown];
 
+    // Resolves the `success` / `error` shorthand into toast settings. Upstream
+    // repeats this four times; it is the same shape every time.
+    const settle = async (
+      type: ToastTypes,
+      value: unknown,
+      source: PromiseData<ToastData>['success'] | PromiseData<ToastData>['error'],
+    ) => {
+      shouldDismiss = false;
+
+      const promiseData = typeof source === 'function' ? await source(value as never) : source;
+      const description =
+        typeof data.description === 'function'
+          ? await data.description(value as never)
+          : data.description;
+
+      const toastSettings: PromiseIExtendedResult = isExtendedResult(promiseData)
+        ? (promiseData as PromiseIExtendedResult)
+        : { message: promiseData as JSX.Element };
+
+      this.create({ id, type, description, ...toastSettings });
+    };
+
     const originalPromise = p
       .then(async (response) => {
         result = ['resolve', response];
@@ -218,73 +268,17 @@ class Observer {
           shouldDismiss = false;
           this.create({ id, type: 'default', message: response });
         } else if (isHttpResponse(response) && !response.ok) {
-          shouldDismiss = false;
-
-          const promiseData =
-            typeof data.error === 'function'
-              ? await data.error(`HTTP error! status: ${response.status}`)
-              : data.error;
-          const description =
-            typeof data.description === 'function'
-              ? await data.description(`HTTP error! status: ${response.status}`)
-              : data.description;
-
-          const toastSettings: PromiseIExtendedResult = isExtendedResult(promiseData)
-            ? (promiseData as PromiseIExtendedResult)
-            : { message: promiseData as JSX.Element };
-
-          this.create({ id, type: 'error', description, ...toastSettings });
+          await settle('error', `HTTP error! status: ${response.status}`, data.error);
         } else if (response instanceof Error) {
-          shouldDismiss = false;
-
-          const promiseData =
-            typeof data.error === 'function' ? await data.error(response) : data.error;
-          const description =
-            typeof data.description === 'function'
-              ? await data.description(response)
-              : data.description;
-
-          const toastSettings: PromiseIExtendedResult = isExtendedResult(promiseData)
-            ? (promiseData as PromiseIExtendedResult)
-            : { message: promiseData as JSX.Element };
-
-          this.create({ id, type: 'error', description, ...toastSettings });
+          await settle('error', response, data.error);
         } else if (data.success !== undefined) {
-          shouldDismiss = false;
-
-          const promiseData =
-            typeof data.success === 'function' ? await data.success(response) : data.success;
-          const description =
-            typeof data.description === 'function'
-              ? await data.description(response)
-              : data.description;
-
-          const toastSettings: PromiseIExtendedResult = isExtendedResult(promiseData)
-            ? (promiseData as PromiseIExtendedResult)
-            : { message: promiseData as JSX.Element };
-
-          this.create({ id, type: 'success', description, ...toastSettings });
+          await settle('success', response, data.success);
         }
       })
       .catch(async (error) => {
         result = ['reject', error];
 
-        if (data.error !== undefined) {
-          shouldDismiss = false;
-
-          const promiseData =
-            typeof data.error === 'function' ? await data.error(error) : data.error;
-          const description =
-            typeof data.description === 'function'
-              ? await data.description(error)
-              : data.description;
-
-          const toastSettings: PromiseIExtendedResult = isExtendedResult(promiseData)
-            ? (promiseData as PromiseIExtendedResult)
-            : { message: promiseData as JSX.Element };
-
-          this.create({ id, type: 'error', description, ...toastSettings });
-        }
+        if (data.error !== undefined) await settle('error', error, data.error);
       })
       .finally(() => {
         if (shouldDismiss) {
@@ -316,10 +310,6 @@ class Observer {
     this.create({ ...data, jsx: jsx(id), id, type: undefined });
     return id;
   };
-
-  getActiveToasts = () => {
-    return this.toasts.filter((toast) => !this.dismissedToasts.has(toast.id)) as ToastT[];
-  };
 }
 
 function isHttpResponse(data: any): data is Response {
@@ -341,32 +331,24 @@ function isValidElement(value: unknown): value is JSX.Element {
   return typeof Node !== 'undefined' && value instanceof Node;
 }
 
-export const ToastState = new Observer();
+export const toastState = new ToastState();
 
 function toastFunction(message: ToastContent, data?: ExternalToast) {
-  return ToastState.message(message, data);
+  return toastState.message(message, data);
 }
 
-const basicToast = toastFunction;
-
-const getHistory = () => ToastState.toasts;
-const getToasts = () => ToastState.getActiveToasts();
-
-export const toast = Object.assign(
-  basicToast,
-  {
-    success: ToastState.success,
-    info: ToastState.info,
-    warning: ToastState.warning,
-    error: ToastState.error,
-    custom: ToastState.custom,
-    message: ToastState.message,
-    promise: ToastState.promise,
-    dismiss: ToastState.dismiss,
-    loading: ToastState.loading,
+export const toast = Object.assign(toastFunction, {
+  success: toastState.success,
+  info: toastState.info,
+  warning: toastState.warning,
+  error: toastState.error,
+  custom: toastState.custom,
+  message: toastState.message,
+  promise: toastState.promise,
+  dismiss: toastState.dismiss,
+  loading: toastState.loading,
+  /** Reactive: the live toasts. Replaces `useSonner()` and `getToasts()`. */
+  get toasts() {
+    return toastState.toasts;
   },
-  {
-    getHistory,
-    getToasts,
-  },
-);
+});

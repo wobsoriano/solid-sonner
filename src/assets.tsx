@@ -1,5 +1,5 @@
 import { For } from 'solid-js';
-import type { JSX } from 'solid-js';
+import type { JSX } from '@solidjs/web';
 import type { ToastTypes } from './types';
 
 const bars = Array(12).fill(0);

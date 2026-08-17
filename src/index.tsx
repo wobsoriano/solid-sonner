@@ -6,22 +6,21 @@
  * https://github.com/emilkowalski/sonner/blob/main/src/index.tsx
  */
 import cssText from './styles.css?inline';
-import type { JSX } from 'solid-js';
+import type { JSX } from '@solidjs/web';
 import {
   For,
   Show,
   createEffect,
   createMemo,
   createSignal,
-  mergeProps,
-  on,
+  merge,
   onCleanup,
-  onMount,
+  onSettled,
+  untrack,
 } from 'solid-js';
-import { createStore, produce, reconcile } from 'solid-js/store';
 import { CloseIcon, Loader, getAsset } from './assets';
 import { useIsDocumentHidden } from './primitives';
-import { ToastState, toast } from './state';
+import { toast, toastState } from './state';
 import {
   type Action,
   type ExternalToast,
@@ -35,7 +34,6 @@ import {
   type ToastOptions,
   type ToastProps,
   type ToastT,
-  type ToastToDismiss,
   type ToasterProps,
   isAction,
 } from './types';
@@ -134,41 +132,8 @@ function mergeClassName(className?: string, legacy?: string) {
 }
 
 function useSonner() {
-  // Starts empty: subscribing replays whatever is already active.
-  const [activeToasts, setActiveToasts] = createSignal<ToastT[]>([]);
-
-  onMount(() => {
-    const unsubscribe = ToastState.subscribe((toastItem) => {
-      if ((toastItem as ToastToDismiss).dismiss) {
-        requestAnimationFrame(() => {
-          setActiveToasts((toasts) => toasts.filter((t) => t.id !== toastItem.id));
-        });
-        return;
-      }
-
-      const nextToast = toastItem as ToastT;
-
-      setActiveToasts((toasts) => {
-        const indexOfExistingToast = toasts.findIndex((t) => t.id === nextToast.id);
-
-        if (indexOfExistingToast !== -1) {
-          return [
-            ...toasts.slice(0, indexOfExistingToast),
-            { ...toasts[indexOfExistingToast], ...nextToast },
-            ...toasts.slice(indexOfExistingToast + 1),
-          ];
-        }
-
-        return [nextToast, ...toasts];
-      });
-    });
-
-    onCleanup(unsubscribe);
-  });
-
-  return {
-    toasts: activeToasts,
-  };
+  // The store is already reactive, so there is nothing to subscribe to.
+  return { toasts: () => toastState.toasts };
 }
 
 function createToastTheme(theme: ToasterProps['theme']) {
@@ -236,18 +201,26 @@ function Toast(props: ToastProps) {
   const offset = createMemo(() => heightIndex() * (props.gap ?? GAP) + toastsHeightBefore());
   const isDocumentHidden = useIsDocumentHidden();
 
-  createEffect(() => {
-    remainingTime = duration();
-  });
+  createEffect(
+    () => duration(),
+    (value) => {
+      remainingTime = value;
+    },
+  );
 
-  function deleteToast() {
+  /**
+   * `markState` is false when the state already flagged this toast, which is
+   * the case when the dismissal came from `toast.dismiss()`. Writing the store
+   * again from inside that effect would be a write in an owned scope.
+   */
+  function deleteToast(markState = true) {
     setRemoved(true);
     setOffsetBeforeRemove(offset());
     props.setHeights((heights) => heights.filter((height) => height.toastId !== props.toast.id));
 
-    window.setTimeout(() => {
-      props.removeToast(props.toast);
-    }, TIME_BEFORE_UNMOUNT);
+    // The state owns the removal, so a recreate of this id can cancel it.
+    if (markState) toastState.markDismissed(props.toast.id);
+    toastState.scheduleRemoval(props.toast.id, TIME_BEFORE_UNMOUNT);
   }
 
   function getLoadingIcon() {
@@ -273,7 +246,7 @@ function Toast(props: ToastProps) {
   const icon = () =>
     props.toast.icon ?? props.icons?.[toastType() as keyof ToastIcons] ?? getAsset(toastType());
 
-  onMount(() => {
+  onSettled(() => {
     setMounted(true);
 
     if (!toastRef) return;
@@ -290,111 +263,112 @@ function Toast(props: ToastProps) {
       ...h,
     ]);
 
-    onCleanup(() => {
+    return () => {
       props.setHeights((h) => h.filter((height) => height.toastId !== props.toast.id));
-    });
-  });
-
-  createEffect(() => {
-    if (!mounted() || !toastRef) return;
-
-    resolveContent(props.toast.title);
-    resolveContent(props.toast.description);
-
-    const originalHeight = toastRef.style.height;
-    toastRef.style.height = 'auto';
-    const nextHeight = toastRef.getBoundingClientRect().height;
-    toastRef.style.height = originalHeight;
-
-    setInitialHeight(nextHeight);
-
-    props.setHeights((heights) => {
-      const alreadyExists = heights.find((height) => height.toastId === props.toast.id);
-      if (!alreadyExists)
-        return [
-          {
-            toastId: props.toast.id,
-            toasterId: props.toast.toasterId,
-            height: nextHeight,
-            position: props.toast.position,
-          },
-          ...heights,
-        ];
-
-      return heights.map((height) =>
-        height.toastId === props.toast.id ? { ...height, height: nextHeight } : height,
-      );
-    });
+    };
   });
 
   createEffect(
-    on(
-      () =>
-        [
-          props.expanded,
-          props.interacting,
-          props.toast,
-          toastType(),
-          isDocumentHidden(),
-          duration(),
-        ] as const,
-      ([expanded, interacting, currentToast, currentType]) => {
-        if (
-          (currentToast.promise && currentType === 'loading') ||
-          currentToast.duration === Number.POSITIVE_INFINITY ||
-          currentType === 'loading'
-        )
-          return;
+    () => [mounted(), props.toast.title, props.toast.description, props.toast.jsx] as const,
+    ([isMounted]) => {
+      if (!isMounted || !toastRef) return;
 
-        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+      const originalHeight = toastRef.style.height;
+      toastRef.style.height = 'auto';
+      const nextHeight = toastRef.getBoundingClientRect().height;
+      toastRef.style.height = originalHeight;
 
-        const pauseTimer = () => {
-          if (lastCloseTimerStartTimeRef < closeTimerStartTimeRef) {
-            const elapsedTime = new Date().getTime() - closeTimerStartTimeRef;
-            remainingTime -= elapsedTime;
-          }
+      setInitialHeight(nextHeight);
 
-          lastCloseTimerStartTimeRef = new Date().getTime();
-        };
+      props.setHeights((heights) => {
+        const alreadyExists = heights.find((height) => height.toastId === props.toast.id);
+        if (!alreadyExists)
+          return [
+            {
+              toastId: props.toast.id,
+              toasterId: props.toast.toasterId,
+              height: nextHeight,
+              position: props.toast.position,
+            },
+            ...heights,
+          ];
 
-        const startTimer = () => {
-          if (remainingTime === Number.POSITIVE_INFINITY) return;
+        return heights.map((height) =>
+          height.toastId === props.toast.id ? { ...height, height: nextHeight } : height,
+        );
+      });
+    },
+  );
 
-          closeTimerStartTimeRef = new Date().getTime();
-          timeoutId = setTimeout(() => {
-            currentToast.onAutoClose?.(currentToast);
-            deleteToast();
-          }, remainingTime);
-        };
+  // Split effect: the compute phase is the dependency declaration, which is what
+  // `on(...)` did in Solid 1. Cleanup is returned from the apply phase.
+  createEffect(
+    () =>
+      [
+        props.expanded,
+        props.interacting,
+        props.toast,
+        toastType(),
+        isDocumentHidden(),
+        duration(),
+        props.pauseWhenPageIsHidden ?? true,
+      ] as const,
+    ([expanded, interacting, currentToast, currentType, documentHidden, , pauseWhenHidden]) => {
+      if (
+        (currentToast.promise && currentType === 'loading') ||
+        currentToast.duration === Number.POSITIVE_INFINITY ||
+        currentType === 'loading'
+      )
+        return;
 
-        const shouldPause =
-          expanded || interacting || ((props.pauseWhenPageIsHidden ?? true) && isDocumentHidden());
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-        if (shouldPause) pauseTimer();
-        else startTimer();
+      const pauseTimer = () => {
+        if (lastCloseTimerStartTimeRef < closeTimerStartTimeRef) {
+          const elapsedTime = new Date().getTime() - closeTimerStartTimeRef;
+          remainingTime -= elapsedTime;
+        }
 
-        onCleanup(() => {
-          if (timeoutId) clearTimeout(timeoutId);
-        });
-      },
-    ),
+        lastCloseTimerStartTimeRef = new Date().getTime();
+      };
+
+      const startTimer = () => {
+        if (remainingTime === Number.POSITIVE_INFINITY) return;
+
+        closeTimerStartTimeRef = new Date().getTime();
+        timeoutId = setTimeout(() => {
+          currentToast.onAutoClose?.(currentToast);
+          deleteToast();
+        }, remainingTime);
+      };
+
+      // Everything read here comes from the compute phase: apply does not track.
+      const shouldPause = expanded || interacting || (pauseWhenHidden && documentHidden);
+
+      if (shouldPause) pauseTimer();
+      else startTimer();
+
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+      };
+    },
   );
 
   createEffect(
-    on(
-      () => props.toast.delete,
-      (shouldDelete) => {
-        if (shouldDelete) {
-          deleteToast();
-          props.toast.onDismiss?.(props.toast);
-        }
-      },
-    ),
+    () => props.toast.dismiss,
+    (shouldDismiss) => {
+      // Guard against re-running for a toast this component already dismissed
+      // itself (close button, swipe, action), which set the same flag.
+      if (!shouldDismiss || untrack(removed)) return;
+
+      deleteToast(false);
+      props.toast.onDismiss?.(props.toast);
+    },
   );
 
   return (
     <li
-      tabIndex={0}
+      tabindex={0}
       ref={toastRef}
       class={cn(
         className(),
@@ -655,7 +629,7 @@ function Toast(props: ToastProps) {
 
 function Toaster(props: ToasterProps) {
   /* eslint-disable solid/reactivity */
-  const propsWithDefaults = mergeProps(
+  const propsWithDefaults = merge(
     {
       position: 'bottom-right' as Position,
       hotkey: ['altKey', 'KeyT'],
@@ -669,9 +643,8 @@ function Toaster(props: ToasterProps) {
   );
   const initialTheme = createToastTheme(propsWithDefaults.theme);
 
-  const [toastsStore, setToastsStore] = createStore<{ toasts: ToastT[] }>({ toasts: [] });
   const filteredToasts = createMemo(() => {
-    const toasts = toastsStore.toasts;
+    const toasts = toastState.toasts;
     if (propsWithDefaults.id)
       return toasts.filter((toast) => toast.toasterId === propsWithDefaults.id);
 
@@ -687,7 +660,9 @@ function Toaster(props: ToasterProps) {
       ]),
     );
   });
-  const [heights, setHeights] = createSignal<HeightT[]>([]);
+  // `ownedWrite` because each Toast measures itself and writes its height from
+  // an effect, which Solid 2 otherwise flags as a write inside an owned scope.
+  const [heights, setHeights] = createSignal<HeightT[]>([], { ownedWrite: true });
   const [expanded, setExpanded] = createSignal(false);
   const [interacting, setInteracting] = createSignal(false);
   const [actualTheme, setActualTheme] = createSignal(initialTheme);
@@ -709,79 +684,44 @@ function Toaster(props: ToasterProps) {
   const toastClassName = () => mergeClassName(toastOptions()?.className, toastOptions()?.class);
 
   const removeToast = (toastToRemove: ToastT) => {
-    setToastsStore('toasts', (toasts) => {
-      if (!toasts.find((toast) => toast.id === toastToRemove.id)?.delete)
-        ToastState.dismiss(toastToRemove.id);
-
-      return toasts.filter(({ id }) => id !== toastToRemove.id);
-    });
+    toastState.remove(toastToRemove.id);
   };
 
-  onMount(() => {
-    const unsubscribe = ToastState.subscribe((toastItem) => {
-      if ((toastItem as ToastToDismiss).dismiss) {
-        requestAnimationFrame(() => {
-          setToastsStore(
-            'toasts',
-            produce((toasts) => {
-              toasts.forEach((toast) => {
-                if (toast.id === toastItem.id) toast.delete = true;
-              });
-            }),
-          );
-        });
+  createEffect(
+    () => propsWithDefaults.theme,
+    (theme) => {
+      if (theme !== 'system') {
+        setActualTheme(theme);
         return;
       }
 
-      const nextToast = toastItem as ToastT;
-      const indexOfExistingToast = toastsStore.toasts.findIndex((t) => t.id === nextToast.id);
+      if (typeof window === 'undefined') return;
 
-      if (indexOfExistingToast !== -1) {
-        setToastsStore('toasts', indexOfExistingToast, reconcile(nextToast));
-        return;
+      const darkMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const updateTheme = ({ matches }: MediaQueryListEvent | MediaQueryList) => {
+        setActualTheme(matches ? 'dark' : 'light');
+      };
+
+      updateTheme(darkMediaQuery);
+
+      try {
+        darkMediaQuery.addEventListener('change', updateTheme);
+        return () => darkMediaQuery.removeEventListener('change', updateTheme);
+      } catch {
+        darkMediaQuery.addListener(updateTheme);
+        return () => darkMediaQuery.removeListener(updateTheme);
       }
+    },
+  );
 
-      setToastsStore(
-        'toasts',
-        produce((toasts) => {
-          toasts.unshift(nextToast);
-        }),
-      );
-    });
+  createEffect(
+    () => filteredToasts().length,
+    (count) => {
+      if (count <= 1) setExpanded(false);
+    },
+  );
 
-    onCleanup(unsubscribe);
-  });
-
-  createEffect(() => {
-    const theme = propsWithDefaults.theme;
-    if (theme !== 'system') {
-      setActualTheme(theme);
-      return;
-    }
-
-    if (typeof window === 'undefined') return;
-
-    const darkMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const updateTheme = ({ matches }: MediaQueryListEvent | MediaQueryList) => {
-      setActualTheme(matches ? 'dark' : 'light');
-    };
-
-    updateTheme(darkMediaQuery);
-
-    try {
-      darkMediaQuery.addEventListener('change', updateTheme);
-      onCleanup(() => darkMediaQuery.removeEventListener('change', updateTheme));
-    } catch {
-      darkMediaQuery.addListener(updateTheme);
-      onCleanup(() => darkMediaQuery.removeListener(updateTheme));
-    }
-  });
-
-  createEffect(() => {
-    if (filteredToasts().length <= 1) setExpanded(false);
-  });
-
-  onMount(() => {
+  onSettled(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const isHotkeyPressed =
         propsWithDefaults.hotkey.length > 0 &&
@@ -800,7 +740,7 @@ function Toaster(props: ToasterProps) {
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    onCleanup(() => document.removeEventListener('keydown', handleKeyDown));
+    return () => document.removeEventListener('keydown', handleKeyDown);
   });
 
   onCleanup(() => {
@@ -817,7 +757,7 @@ function Toaster(props: ToasterProps) {
         propsWithDefaults.customAriaLabel ??
         `${propsWithDefaults.containerAriaLabel} ${hotkeyLabel()}`
       }
-      tabIndex={-1}
+      tabindex={-1}
       aria-live="polite"
       aria-relevant="additions text"
       aria-atomic="false"
@@ -840,7 +780,7 @@ function Toaster(props: ToasterProps) {
           return (
             <Show when={filteredToasts().length > 0}>
               <ol
-                tabIndex={-1}
+                tabindex={-1}
                 ref={listRef}
                 dir={
                   propsWithDefaults.dir === 'auto' ? getDocumentDirection() : propsWithDefaults.dir
@@ -939,5 +879,5 @@ function Toaster(props: ToasterProps) {
   );
 }
 
-export { toast, Toaster, useSonner };
-export type { Action, ExternalToast, ToastClassnames, ToastT, ToastToDismiss, ToasterProps };
+export { toast, toastState, Toaster, useSonner };
+export type { Action, ExternalToast, ToastClassnames, ToastT, ToasterProps };
