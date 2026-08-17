@@ -16,7 +16,12 @@ export interface Action {
 
 export interface ToastT {
   id: ToastId;
-  phase: ToastPhase;
+  /** Sketch A only. */
+  phase?: ToastPhase;
+  /** Sketch B (svelte-sonner parity) flags. */
+  dismiss?: boolean;
+  delete?: boolean;
+  updated?: boolean;
   toasterId?: string;
   title?: ToastContent;
   description?: ToastContent;
