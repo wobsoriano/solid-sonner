@@ -24,8 +24,6 @@ export default defineConfig({
     ignorePatterns: ['CHANGELOG.md'],
   },
   lint: {
-    // Targets Solid 2, whose packages aren't installed here.
-    ignorePatterns: ['design'],
     // `typeCheck` runs tsgolint, which is TS7-based and disagrees with the
     // TypeScript we build with. `pnpm typecheck` owns compiler diagnostics.
     options: { typeAware: true },
