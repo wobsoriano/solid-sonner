@@ -20,7 +20,7 @@ import {
 } from 'solid-js';
 import { CloseIcon, Loader, getAsset } from './assets';
 import { useIsDocumentHidden } from './primitives';
-import { toast, toastState } from './state';
+import { markDismissed, remove, scheduleRemoval, toast, toasts } from './state';
 import {
   type Action,
   type ExternalToast,
@@ -133,7 +133,7 @@ function mergeClassName(className?: string, legacy?: string) {
 
 function useSonner() {
   // The store is already reactive, so there is nothing to subscribe to.
-  return { toasts: () => toastState.toasts };
+  return { toasts: () => toasts };
 }
 
 function createToastTheme(theme: ToasterProps['theme']) {
@@ -219,8 +219,8 @@ function Toast(props: ToastProps) {
     props.setHeights((heights) => heights.filter((height) => height.toastId !== props.toast.id));
 
     // The state owns the removal, so a recreate of this id can cancel it.
-    if (markState) toastState.markDismissed(props.toast.id);
-    toastState.scheduleRemoval(props.toast.id, TIME_BEFORE_UNMOUNT);
+    if (markState) markDismissed(props.toast.id);
+    scheduleRemoval(props.toast.id, TIME_BEFORE_UNMOUNT);
   }
 
   function getLoadingIcon() {
@@ -644,11 +644,9 @@ function Toaster(props: ToasterProps) {
   const initialTheme = createToastTheme(propsWithDefaults.theme);
 
   const filteredToasts = createMemo(() => {
-    const toasts = toastState.toasts;
-    if (propsWithDefaults.id)
-      return toasts.filter((toast) => toast.toasterId === propsWithDefaults.id);
+    if (propsWithDefaults.id) return toasts.filter((t) => t.toasterId === propsWithDefaults.id);
 
-    return toasts.filter((toast) => !toast.toasterId);
+    return toasts.filter((t) => !t.toasterId);
   });
   const possiblePositions = createMemo(() => {
     return Array.from(
@@ -684,7 +682,7 @@ function Toaster(props: ToasterProps) {
   const toastClassName = () => mergeClassName(toastOptions()?.className, toastOptions()?.class);
 
   const removeToast = (toastToRemove: ToastT) => {
-    toastState.remove(toastToRemove.id);
+    remove(toastToRemove.id);
   };
 
   createEffect(
@@ -879,5 +877,5 @@ function Toaster(props: ToasterProps) {
   );
 }
 
-export { toast, toastState, Toaster, useSonner };
+export { toast, toasts, Toaster, useSonner };
 export type { Action, ExternalToast, ToastClassnames, ToastT, ToasterProps };
