@@ -19,7 +19,7 @@ jobs:
       # Sets up vp, Node and pnpm and installs, replacing setup-node and
       # pnpm/action-setup. The vp version is read from the vite-plus dependency.
       # Exact tag on purpose: the moving v1 tag is frozen.
-      - uses: voidzero-dev/setup-vp@v1.17.0
+      - uses: voidzero-dev/setup-vp@v1.18.0
         with:
           node-version: '24'
           cache: true
@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: voidzero-dev/setup-vp@v1.17.0
+      - uses: voidzero-dev/setup-vp@v1.18.0
         with:
           node-version: '24'
           cache: true
