@@ -3,7 +3,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import xml from 'highlight.js/lib/languages/xml';
 import 'highlight.js/styles/github.css';
 import type { Component } from 'solid-js';
-import { Show, createComputed, createMemo, createSignal, mergeProps, untrack } from 'solid-js';
+import { Show, createEffect, createMemo, createSignal, merge } from 'solid-js';
 import copy from 'copy-to-clipboard';
 import styles from './code-block.module.css';
 
@@ -29,7 +29,7 @@ interface Props {
 
 export const CodeBlock: Component<Props> = (props) => {
   /* eslint-disable solid/reactivity */
-  const propsWithDefaults = mergeProps(
+  const propsWithDefaults = merge(
     {
       language: '',
       autodetect: true,
@@ -41,9 +41,12 @@ export const CodeBlock: Component<Props> = (props) => {
   const [language, setLanguage] = createSignal(propsWithDefaults.language || '');
   const [copying, setCopying] = createSignal(0);
 
-  createComputed(() => {
-    setLanguage(propsWithDefaults.language);
-  });
+  createEffect(
+    () => propsWithDefaults.language,
+    (value) => {
+      setLanguage(value);
+    },
+  );
 
   const autodetect = createMemo(() => props.autodetect || !language());
   const cannotDetectLanguage = createMemo(() => !autodetect() && !hljs.getLanguage(language()));
@@ -54,23 +57,28 @@ export const CodeBlock: Component<Props> = (props) => {
     return `hljs ${language()} ${props.class}`;
   });
 
-  const highlightedCode = createMemo(() => {
-    if (cannotDetectLanguage()) return escapeHtml(props.children);
+  // Solid 2 rejects writes inside an owned computation, even under untrack, so
+  // the detected language is published from an effect rather than the memo.
+  const highlighted = createMemo(() => {
+    if (cannotDetectLanguage())
+      return { value: escapeHtml(props.children), language: undefined as string | undefined };
 
-    if (autodetect()) {
-      const result = hljs.highlightAuto(props.children);
-      untrack(() => {
-        setLanguage(result.language ?? '');
-      });
-      return result.value;
-    }
+    if (autodetect()) return hljs.highlightAuto(props.children);
 
-    const result = hljs.highlight(props.children, {
+    return hljs.highlight(props.children, {
       language: language(),
       ignoreIllegals: props.ignoreIllegals,
     });
-    return result.value;
   });
+
+  createEffect(
+    () => highlighted().language,
+    (detected) => {
+      if (detected !== undefined) setLanguage(detected);
+    },
+  );
+
+  const highlightedCode = () => highlighted().value;
 
   const onCopy = () => {
     copy(props.children).then(

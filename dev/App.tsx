@@ -1,4 +1,4 @@
-import { Show, createSignal, onMount } from 'solid-js';
+import { Show, createSignal, onSettled } from 'solid-js';
 import { Toaster, toast } from 'src/';
 
 import { Hero } from './components/Hero';
@@ -28,7 +28,7 @@ export default function Home() {
   };
 
   // Test hook for the Playwright suite, so the docs site needs no test-only UI.
-  onMount(() => {
+  onSettled(() => {
     Object.assign(window, { __sonnerTest: { toast, remountToaster } });
   });
 

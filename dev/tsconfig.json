@@ -4,7 +4,8 @@
     "paths": {
       "src": ["../src/*"]
     },
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "jsxImportSource": "@solidjs/web"
     // "baseUrl": "."
   },
   "exclude": ["node_modules", "dist"]
