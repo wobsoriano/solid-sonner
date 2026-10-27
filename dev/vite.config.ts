@@ -29,6 +29,15 @@ export default defineConfig({
     target: 'esnext',
   },
   resolve: {
-    alias: [{ find: 'src/', replacement: fileURLToPath(new URL('../src', import.meta.url)) }],
+    alias: [
+      {
+        find: 'src/',
+        // `TEST_DIST=1` runs the app against the published `solid` entry so
+        // build-only regressions fail the suite.
+        replacement: fileURLToPath(
+          new URL(process.env.TEST_DIST ? '../dist/index.jsx' : '../src', import.meta.url),
+        ),
+      },
+    ],
   },
 });

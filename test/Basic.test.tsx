@@ -83,6 +83,34 @@ test.describe('Basic functionality', () => {
     await expect(page.locator('[data-sonner-toast]')).toHaveCount(1);
   });
 
+  test('hovering a toast keeps its height', async ({ page }) => {
+    await page.getByTestId('hero-default-button').click();
+    const toast = page.locator('[data-sonner-toast]');
+    await expect(toast).toBeVisible();
+    const before = await toast.boundingBox();
+    if (!before) throw new Error('Toast bounding box missing');
+
+    await toast.hover();
+    await expect(toast).toHaveAttribute('data-expanded', 'true');
+    // Wait out the 400ms height transition.
+    await page.waitForTimeout(500);
+    const after = await toast.boundingBox();
+    expect(after?.height).toBeCloseTo(before.height, 0);
+  });
+
+  test('the hotkey expands the toaster and Escape collapses it', async ({ page }) => {
+    await page.getByTestId('hero-default-button').click();
+    const toast = page.locator('[data-sonner-toast]');
+    await expect(toast).toBeVisible();
+
+    await page.keyboard.press('Alt+KeyT');
+    await expect(page.locator('[data-sonner-toaster]')).toBeFocused();
+    await expect(toast).toHaveAttribute('data-expanded', 'true');
+
+    await page.keyboard.press('Escape');
+    await expect(toast).toHaveAttribute('data-expanded', 'false');
+  });
+
   test('multiple default-position toasts remain stacked', async ({ page }) => {
     await page.getByTestId('hero-default-button').click();
     await page.getByTestId('types-default').click();

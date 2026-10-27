@@ -52,6 +52,10 @@ jobs:
       # go through the package.json script.
       - run: vp run test
 
+      - run: vp run test
+        env:
+          TEST_DIST: '1'
+
       - uses: actions/upload-artifact@v7
         if: always()
         with:

@@ -395,7 +395,7 @@ function Toast(props: ToastProps) {
   return (
     <li
       tabIndex={0}
-      ref={toastRef}
+      ref={(el) => (toastRef = el)}
       class={cn(
         className(),
         toastClassName(),
@@ -841,7 +841,7 @@ function Toaster(props: ToasterProps) {
             <Show when={filteredToasts().length > 0}>
               <ol
                 tabIndex={-1}
-                ref={listRef}
+                ref={(el) => (listRef = el)}
                 dir={
                   propsWithDefaults.dir === 'auto' ? getDocumentDirection() : propsWithDefaults.dir
                 }
