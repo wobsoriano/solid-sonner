@@ -31,9 +31,5 @@ export default defineConfig({
     // `typeCheck` runs tsgolint, which is TS7-based and disagrees with the
     // TypeScript we build with. `pnpm typecheck` owns compiler diagnostics.
     options: { typeAware: true },
-    rules: {
-      // Solid assigns these through `ref={}`, which oxlint does not model.
-      'no-unassigned-vars': 'off',
-    },
   },
 });
