@@ -1,11 +1,17 @@
 # solid-sonner
 
+## 0.3.3
+
+### Patch Changes
+
+- 880988c: Fix the `solid` export (`dist/index.jsx`) shipping with its element refs compiled away. Toasts no longer collapse on hover, swipe-to-dismiss works again, and the hotkey and Escape handlers reach the toaster.
+
 ## 0.3.2
 
 ### Patch Changes
 
 - 442c3e9: Fix a batch of issues, ported from upstream sonner#777:
-  
+
   - `toast()` no longer appends a duplicate history entry when called with the id of an existing toast, and now honours the `dismissible` default
   - `toast()` and `toast.custom()` clear the loading state when called with the id of a loading toast
   - `toast.custom()` keeps an id of `0`, and `toast.dismiss(0)` dismisses that toast rather than every toast
