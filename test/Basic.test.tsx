@@ -9,11 +9,16 @@ declare global {
       toast: typeof toastApi;
       remountToaster: (fire: () => void) => void;
     };
+    __solidDiagnostics: string[];
   }
 }
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
+});
+
+test.afterEach(async ({ page }) => {
+  expect(await page.evaluate(() => window.__solidDiagnostics)).toEqual([]);
 });
 
 test.describe('Basic functionality', () => {
@@ -158,6 +163,14 @@ test.describe('Basic functionality', () => {
     await expect(page.getByText('Event Created')).toHaveCount(1);
     await page.getByTestId('close-button').click();
     await expect(page.getByText('Event Created')).toHaveCount(0);
+
+    // toast.custom() calls the JSX in the caller, here a click handler with no
+    // owner, so Solid reports its attribute effects as unowned.
+    await page.evaluate(() => {
+      const diagnostics = window.__solidDiagnostics;
+      const index = diagnostics.findIndex((entry) => entry.startsWith('NO_OWNER_EFFECT:'));
+      if (index !== -1) diagnostics.splice(index, 1);
+    });
   });
 });
 

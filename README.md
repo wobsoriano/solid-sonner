@@ -20,6 +20,8 @@ yarn add solid-sonner
 pnpm add solid-sonner
 ```
 
+`solid-sonner` 1.0 and later require Solid 2 (`solid-js` and `@solidjs/web`). For Solid 1, install `solid-sonner@0.3`.
+
 ## Quick start
 
 ```tsx

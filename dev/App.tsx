@@ -1,4 +1,4 @@
-import { Show, createSignal, onMount } from 'solid-js';
+import { Show, createSignal, flush, onSettled } from 'solid-js';
 import { Toaster, toast } from 'src/';
 
 import { Hero } from './components/Hero';
@@ -22,13 +22,14 @@ export default function Home() {
   // Runs `fire` while nothing is subscribed, so the suite can check that toasts
   // created before the Toaster mounts are replayed.
   const remountToaster = (fire: () => void) => {
-    setToasterMounted(false);
+    // Without the flush both writes land in one batch and the Toaster never unmounts.
+    flush(() => setToasterMounted(false));
     fire();
     setToasterMounted(true);
   };
 
   // Test hook for the Playwright suite, so the docs site needs no test-only UI.
-  onMount(() => {
+  onSettled(() => {
     Object.assign(window, { __sonnerTest: { toast, remountToaster } });
   });
 
