@@ -48,15 +48,18 @@
     "lint:fix": "vp lint --fix",
     "format": "vp fmt",
     "check": "vp check",
-    "release": "changeset publish"
+    "release": "changeset publish",
+    "test:e2e": "e2e run"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
+    "@e2e-dev/web": "^0.16.0",
     "@playwright/test": "^1.62.1",
     "@solidjs/vite-plugin": "^3.0.1",
     "@solidjs/web": "^2.0.1",
     "@types/node": "^24.13.3",
     "copy-to-clipboard": "^4.0.2",
+    "e2e": "^0.23.1",
     "highlight.js": "^11.12.0",
     "solid-js": "^2.0.1",
     "typescript": "^6.0.3",

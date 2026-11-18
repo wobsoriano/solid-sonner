@@ -66,3 +66,37 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  e2e:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: voidzero-dev/setup-vp@v1.21.2
+        with:
+          node-version: '24'
+          cache: true
+          run-install: |
+            - args: ['--frozen-lockfile', '--prefer-offline']
+
+      - run: vp pack
+
+      - run: vp exec e2e-web install chromium --with-deps
+
+      - run: vp exec e2e run --reporter list,junit
+
+      - run: vp exec e2e run --reporter list,junit
+        env:
+          TEST_DIST: '1'
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-report
+          path: |
+            .e2e/report.json
+            .e2e/junit.xml
+            .e2e/results
+          if-no-files-found: warn
+          retention-days: 30
