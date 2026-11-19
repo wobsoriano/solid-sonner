@@ -26,7 +26,6 @@ export const Position: Component<{
         <For each={positions}>
           {(position) => (
             <button
-              data-testid={`position-${position}`}
               data-active={props.position === position}
               class="button"
               onClick={() => {

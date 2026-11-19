@@ -139,7 +139,6 @@ export function Types() {
           {(type) => (
             <button
               class="button"
-              data-testid={`types-${type.name.toLowerCase()}`}
               data-active={activeType()?.name === type.name}
               onClick={() => {
                 type.action();

@@ -14,7 +14,10 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "solid-sonner": ["./src/index.tsx"]
+    }
   },
   "exclude": ["node_modules", "dist", "./dev"]
 }

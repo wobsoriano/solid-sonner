@@ -1,5 +1,5 @@
-import { Show, createSignal, flush, onSettled } from 'solid-js';
-import { Toaster, toast } from 'src/';
+import { createSignal } from 'solid-js';
+import { Toaster } from 'src/';
 
 import { Hero } from './components/Hero';
 import { Types } from './components/Types';
@@ -17,33 +17,16 @@ export default function Home() {
   >('bottom-right');
   const [richColors, setRichColors] = createSignal(false);
   const [closeButton, setCloseButton] = createSignal(false);
-  const [toasterMounted, setToasterMounted] = createSignal(true);
-
-  // Runs `fire` while nothing is subscribed, so the suite can check that toasts
-  // created before the Toaster mounts are replayed.
-  const remountToaster = (fire: () => void) => {
-    // Without the flush both writes land in one batch and the Toaster never unmounts.
-    flush(() => setToasterMounted(false));
-    fire();
-    setToasterMounted(true);
-  };
-
-  // Test hook for the Playwright suite, so the docs site needs no test-only UI.
-  onSettled(() => {
-    Object.assign(window, { __sonnerTest: { toast, remountToaster } });
-  });
 
   return (
     <>
-      <Show when={toasterMounted()}>
-        <Toaster
-          offset={32}
-          richColors={richColors()}
-          closeButton={closeButton()}
-          expand={expand()}
-          position={position()}
-        />
-      </Show>
+      <Toaster
+        offset={32}
+        richColors={richColors()}
+        closeButton={closeButton()}
+        expand={expand()}
+        position={position()}
+      />
 
       <main class="container">
         <Hero />

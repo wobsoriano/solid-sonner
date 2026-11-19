@@ -36,6 +36,7 @@
   },
   "scripts": {
     "dev": "vite serve dev",
+    "dev:test": "vite --config test/vite.config.ts",
     "prepare": "vp config",
     "build": "vp pack",
     "dev:build": "vite build dev",
