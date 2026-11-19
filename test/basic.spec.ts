@@ -1,24 +1,12 @@
 // Port of https://github.com/emilkowalski/sonner/blob/main/test/tests/basic.spec.ts
 // against the page in test/app.
-import { expect, test } from '@playwright/test';
 import { toast } from '../src/state';
-
-// Solid's dev build reports reactivity mistakes as console warnings. Any of them fails the test.
-const solidDiagnostics = new WeakMap<object, string[]>();
+import { expect, test } from './support/fixtures';
 
 test.beforeEach(async ({ page }) => {
-  const diagnostics: string[] = [];
-  solidDiagnostics.set(page, diagnostics);
-  page.on('console', (message) => {
-    const text = message.text();
-    if (/^\[[A-Z_]+\]/.test(text)) diagnostics.push(text.split('\n')[0]!);
-  });
   await page.goto('/');
 });
 
-test.afterEach(async ({ page }) => {
-  expect(solidDiagnostics.get(page)).toEqual([]);
-});
 test.describe('Basic functionality', () => {
   test('toast is rendered and disappears after the default timeout', async ({ page }) => {
     await page.getByTestId('default-button').click();

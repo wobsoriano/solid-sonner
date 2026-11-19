@@ -5,6 +5,12 @@ import { Toaster, type ToasterProps, toast } from 'solid-sonner';
 const promise = () => new Promise((resolve) => setTimeout(resolve, 2000));
 
 // Rendered above the <Toaster />, so it settles before the Toaster subscribes.
+function ToastDuringRender() {
+  toast('Toast created during render');
+
+  return null;
+}
+
 function ToastOnMount() {
   onSettled(() => {
     toast('Toast rendered on mount', { id: 'toast-on-mount' });
@@ -23,6 +29,7 @@ export default function App() {
   const [isFinally, setIsFinally] = createSignal(false);
   const [showAriaLabels, setShowAriaLabels] = createSignal(false);
   const [historySize, setHistorySize] = createSignal<number | null>(null);
+  const [showToastDuringRender, setShowToastDuringRender] = createSignal(false);
 
   return (
     <>
@@ -485,6 +492,31 @@ export default function App() {
       >
         ReactNode description that fills the width
       </button>
+      {/* The rest are solid-sonner's own, for regressions sonner's suite does not cover. */}
+      <button
+        data-testid="stacked-toasts"
+        class="button"
+        onClick={() => {
+          toast('First stacked toast', { duration: 10000 });
+          toast('Second stacked toast', {
+            duration: 10000,
+            description: 'A description makes this one taller',
+          });
+          toast('Third stacked toast', { duration: 10000 });
+        }}
+      >
+        Render three toasts at once
+      </button>
+      <button
+        data-testid="toast-during-render"
+        class="button"
+        onClick={() => setShowToastDuringRender(true)}
+      >
+        Render a component that creates a toast
+      </button>
+      <Show when={showToastDuringRender()}>
+        <ToastDuringRender />
+      </Show>
       <Show when={showAutoClose()}>
         <div data-testid="auto-close-el" />
       </Show>
