@@ -4,46 +4,15 @@ import { test } from '@e2e-dev/web';
 import type { Browser } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { toast } from '../src/state';
-
-declare global {
-  interface Window {
-    __solidDiagnostics: string[];
-  }
-}
+import { gateSolidDiagnostics } from './support/diagnostics';
 
 const TOAST = '[data-sonner-toast]';
 const TOASTER = '[data-sonner-toaster]';
 
-test.beforeEach(async ({ app, browser }) => {
-  // Solid's dev build reports reactivity mistakes as console warnings, and e2e
-  // cannot listen to the console, so the page keeps them for the afterEach.
-  await browser.addInitScript(() => {
-    const diagnostics: string[] = [];
-    window.__solidDiagnostics = diagnostics;
-    for (const level of ['warn', 'error'] as const) {
-      const original = console[level].bind(console);
-      console[level] = (...args: unknown[]) => {
-        const [first] = args;
-        if (typeof first === 'string' && /^\[[A-Z_]+\]/.test(first))
-          diagnostics.push(first.split('\n')[0]!);
-        original(...args);
-      };
-    }
-  });
-  await app.open('/');
-});
+gateSolidDiagnostics();
 
-test.afterEach(async ({ browser }) => {
-  // Dismissals land on the next animation frame, which can come after the test body returns.
-  const diagnostics = await browser.evaluate(
-    () =>
-      new Promise<string[]>((resolve) => {
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => resolve(window.__solidDiagnostics)),
-        );
-      }),
-  );
-  expect(diagnostics).toEqual([]);
+test.beforeEach(async ({ app }) => {
+  await app.open('/');
 });
 
 // No waitForTimeout in e2e: the page watches the whole document for `ms` and

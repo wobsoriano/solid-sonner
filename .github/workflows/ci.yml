@@ -90,6 +90,10 @@ jobs:
         env:
           TEST_DIST: '1'
 
+      - run: vp exec e2e run --reporter list,junit
+        env:
+          TEST_DIST: default
+
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
