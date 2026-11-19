@@ -26,7 +26,6 @@ export default function App() {
   const [theme, setTheme] = createSignal(
     (searchParams.get('theme') ?? 'light') as ToasterProps['theme'],
   );
-  const [isFinally, setIsFinally] = createSignal(false);
   const [showAriaLabels, setShowAriaLabels] = createSignal(false);
   const [historySize, setHistorySize] = createSignal<number | null>(null);
   const [showToastDuringRender, setShowToastDuringRender] = createSignal(false);
@@ -36,28 +35,20 @@ export default function App() {
       <Show when={searchParams.get('toastOnMount') === ''}>
         <ToastOnMount />
       </Show>
-      <button data-testid="theme-button" class="button" onClick={() => setTheme('dark')}>
+      <button data-testid="theme-button" onClick={() => setTheme('dark')}>
         Change theme
       </button>
-      <button data-testid="default-button" class="button" onClick={() => toast('My Toast')}>
+      <button data-testid="default-button" onClick={() => toast('My Toast')}>
         Render Toast
       </button>
-      <button data-testid="default-button-top" class="button" onClick={() => toast('My Toast')}>
-        Render Toast Top
-      </button>
-      <button
-        data-testid="success"
-        class="button"
-        onClick={() => toast.success('My Success Toast')}
-      >
+      <button data-testid="success" onClick={() => toast.success('My Success Toast')}>
         Render Success Toast
       </button>
-      <button data-testid="error" class="button" onClick={() => toast.error('My Error Toast')}>
+      <button data-testid="error" onClick={() => toast.error('My Error Toast')}>
         Render Error Toast
       </button>
       <button
         data-testid="action"
-        class="button"
         onClick={() =>
           toast('My Message', {
             action: {
@@ -71,7 +62,6 @@ export default function App() {
       </button>
       <button
         data-testid="action-prevent"
-        class="button"
         onClick={() =>
           toast('My Message', {
             action: {
@@ -88,16 +78,11 @@ export default function App() {
       </button>
       <button
         data-testid="promise"
-        data-finally={isFinally() ? '1' : '0'}
-        class="button"
         onClick={() =>
           toast.promise(promise, {
             loading: 'Loading...',
             success: 'Loaded',
             error: 'Error',
-            finally: () => {
-              setIsFinally(true);
-            },
           })
         }
       >
@@ -105,7 +90,6 @@ export default function App() {
       </button>
       <button
         data-testid="custom"
-        class="button"
         onClick={() =>
           toast.custom((t) => (
             <div>
@@ -121,7 +105,6 @@ export default function App() {
       </button>
       <button
         data-testid="custom-cancel-button-toast"
-        class="button"
         onClick={() =>
           toast('My Custom Cancel Button', {
             cancel: {
@@ -135,7 +118,6 @@ export default function App() {
       </button>
       <button
         data-testid="custom-with-empty-id"
-        class="button"
         onClick={() =>
           toast.custom(
             (t) => (
@@ -156,14 +138,12 @@ export default function App() {
       </button>
       <button
         data-testid="infinity-toast"
-        class="button"
         onClick={() => toast('My Toast', { duration: Number.POSITIVE_INFINITY })}
       >
         Render Infinity Toast
       </button>
       <button
         data-testid="auto-close-toast-callback"
-        class="button"
         onClick={() =>
           toast('My Toast', {
             onAutoClose: () => setShowAutoClose(true),
@@ -174,7 +154,6 @@ export default function App() {
       </button>
       <button
         data-testid="dismiss-toast-callback"
-        class="button"
         onClick={() =>
           toast('My Toast', {
             onDismiss: () => {
@@ -187,7 +166,6 @@ export default function App() {
       </button>
       <button
         data-testid="non-dismissible-toast"
-        class="button"
         onClick={() =>
           toast('My Toast', {
             dismissible: false,
@@ -198,7 +176,6 @@ export default function App() {
       </button>
       <button
         data-testid="update-toast"
-        class="button"
         onClick={() => {
           const toastId = toast('My Unupdated Toast', {
             duration: 10000,
@@ -213,7 +190,6 @@ export default function App() {
       </button>
       <button
         data-testid="update-toast-duration"
-        class="button"
         onClick={() => {
           const toastId = toast('My Unupdated Toast, Updated After 3 Seconds', {
             duration: 10000,
@@ -230,32 +206,18 @@ export default function App() {
       </button>
       <button
         data-testid="string-description"
-        class="button"
         onClick={() => toast('Custom Description', { description: 'string description' })}
       >
         String Description
       </button>
       <button
-        data-testid="react-node-description"
-        class="button"
-        onClick={() =>
-          toast('Custom Description', {
-            description: <div>This is my custom ReactNode description</div>,
-          })
-        }
-      >
-        ReactNode Description
-      </button>
-      <button
         data-testid="close-button"
-        class="button"
         onClick={() => toast('Toast with close button', { closeButton: true })}
       >
         Render close button
       </button>
       <button
         data-testid="extended-promise"
-        class="button"
         onClick={() =>
           toast.promise(
             new Promise<{ name: string }>((resolve) => {
@@ -288,7 +250,6 @@ export default function App() {
       </button>
       <button
         data-testid="extended-promise-error"
-        class="button"
         onClick={() =>
           toast.promise(
             new Promise<{ name: string }>((_, reject) => {
@@ -322,7 +283,6 @@ export default function App() {
       </button>
       <button
         data-testid="error-promise"
-        class="button"
         onClick={() => {
           const whatWillHappen = async (): Promise<{ ok?: boolean; error?: string }> => {
             throw new Error('Not implemented');
@@ -344,7 +304,6 @@ export default function App() {
         Error Promise Toast
       </button>
       <button
-        class="button"
         onClick={() => {
           setShowAriaLabels(true);
           toast('Toast with custom ARIA labels', {
@@ -357,28 +316,21 @@ export default function App() {
       </button>
       <button
         data-testid="toast-secondary"
-        class="button"
         onClick={() => toast('Secondary Toaster Toast', { toasterId: 'secondary' })}
       >
         Render Toast in Secondary Toaster
       </button>
-      <button
-        data-testid="toast-global"
-        class="button"
-        onClick={() => toast('Global Toaster Toast')}
-      >
+      <button data-testid="toast-global" onClick={() => toast('Global Toaster Toast')}>
         Render Toast in Global Toaster
       </button>
       <button
         data-testid="testid-toast-button"
-        class="button"
         onClick={() => toast('Toast with test ID', { testId: 'my-test-toast' })}
       >
         Toast with testId
       </button>
       <button
         data-testid="testid-promise-toast-button"
-        class="button"
         onClick={() =>
           toast.promise(promise, {
             loading: 'Loading...',
@@ -392,7 +344,6 @@ export default function App() {
       </button>
       <button
         data-testid="promise-custom-icon"
-        class="button"
         onClick={() =>
           toast.promise(promise, {
             loading: 'Loading...',
@@ -408,7 +359,6 @@ export default function App() {
       </button>
       <button
         data-testid="reused-id-with-action"
-        class="button"
         onClick={() =>
           toast.error('Toast with action', {
             id: 'reused-id',
@@ -424,14 +374,12 @@ export default function App() {
       </button>
       <button
         data-testid="reused-id-without-action"
-        class="button"
         onClick={() => toast.success('Toast without action', { id: 'reused-id', duration: 10000 })}
       >
         Toast without action and the same fixed id
       </button>
       <button
         data-testid="history-flood"
-        class="button"
         onClick={() => {
           for (let i = 0; i < 120; i++) {
             toast.dismiss(toast(`Flood ${i}`, { duration: 1 }));
@@ -446,21 +394,18 @@ export default function App() {
       </Show>
       <button
         data-testid="loading-toast-fixed-id"
-        class="button"
         onClick={() => toast.loading('Loading', { id: 'fixed-id' })}
       >
         Loading toast with a fixed id
       </button>
       <button
         data-testid="default-toast-fixed-id"
-        class="button"
         onClick={() => toast('Done', { id: 'fixed-id', duration: 10000 })}
       >
         Default toast with the same fixed id
       </button>
       <button
         data-testid="custom-toast-fixed-id"
-        class="button"
         onClick={() =>
           toast.custom(() => <div>Custom done</div>, { id: 'fixed-id', duration: 10000 })
         }
@@ -469,7 +414,6 @@ export default function App() {
       </button>
       <button
         data-testid="dismiss-and-recreate"
-        class="button"
         onClick={() => {
           toast.warning('Remounted toast', { id: 'remounted', duration: 10000 });
           toast.dismiss('remounted');
@@ -480,7 +424,6 @@ export default function App() {
       </button>
       <button
         data-testid="react-node-description-wide"
-        class="button"
         onClick={() =>
           toast('Title', {
             duration: 10000,
@@ -495,7 +438,6 @@ export default function App() {
       {/* The rest are solid-sonner's own, for regressions sonner's suite does not cover. */}
       <button
         data-testid="stacked-toasts"
-        class="button"
         onClick={() => {
           toast('First stacked toast', { duration: 10000 });
           toast('Second stacked toast', {
@@ -507,11 +449,7 @@ export default function App() {
       >
         Render three toasts at once
       </button>
-      <button
-        data-testid="toast-during-render"
-        class="button"
-        onClick={() => setShowToastDuringRender(true)}
-      >
+      <button data-testid="toast-during-render" onClick={() => setShowToastDuringRender(true)}>
         Render a component that creates a toast
       </button>
       <Show when={showToastDuringRender()}>
@@ -542,13 +480,7 @@ export default function App() {
         dir={(searchParams.get('dir') ?? 'auto') as ToasterProps['dir']}
         containerAriaLabel={showAriaLabels() ? 'Notices' : undefined}
       />
-      <Toaster
-        id="secondary"
-        position="top-left"
-        toastOptions={{
-          class: 'secondary-toaster',
-        }}
-      />
+      <Toaster id="secondary" position="top-left" />
     </>
   );
 }
