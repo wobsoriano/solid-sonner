@@ -82,7 +82,7 @@ jobs:
 
       - run: vp pack
 
-      - run: vp exec e2e-web install chromium --with-deps
+      - run: vp exec e2e-web install chromium webkit --with-deps
 
       - run: vp exec e2e run --reporter list,junit
 

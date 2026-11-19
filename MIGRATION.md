@@ -1,31 +1,36 @@
 # Migration to e2e
 
-Source: Playwright, `test/**/*.test.tsx` (guide: https://e2e.com/docs/migrate/playwright.md, engine: https://e2e.com/docs/web.md)
+Source: Playwright, `test/**/*.spec.ts` (guide: https://e2e.com/docs/migrate/playwright.md, engine: https://e2e.com/docs/web.md)
 e2e: `e2e.config.ts`, tests `tests/**/*.e2e.ts`
-Start dependencies: none. `app.command` starts the dev server (`pnpm dev`, port 3000).
+Start dependencies: none. `app.command` starts the test page (`pnpm dev:test`, port 3001, from `test/vite.config.ts`).
 Run old: `pnpm test` (dist build: `pnpm build && TEST_DIST=1 pnpm test`)
 Run new: `pnpm test:e2e` (dist build: `pnpm build && TEST_DIST=1 pnpm test:e2e`)
-Harness: done, smoke `tests/basic.e2e.ts` "multiple default-position toasts remain stacked" on chromium
+Harness: done, smoke `tests/basic.e2e.ts` "toast is rendered and disappears after the default timeout" on chromium and webkit
 Defect check: on
 
-| Source              | e2e                | Status | Assertions (source → e2e) | Passing                          | Defect check                                                                                                         | Notes                                                                                                                                      |
-| ------------------- | ------------------ | ------ | ------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| test/Basic.test.tsx | tests/basic.e2e.ts | ported | 60 → 60                   | chromium 3/3 (84 runs), dist 1/1 | raw boolean data attributes: both fail the same 4 tests. Unowned reads in the dismissal effect: both fail the same 3 | The diagnostics gate waits two animation frames, so it also catches the 150-toast dismissal that the Playwright hook caught only by timing |
+| Source             | e2e                | Status | Assertions (source → e2e) | Passing                                          | Defect check                                                                                                                                         | Notes                                                                                                                 |
+| ------------------ | ------------------ | ------ | ------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| test/basic.spec.ts | tests/basic.e2e.ts | ported | 93 → 102                  | chromium and webkit 49/49 (294 runs), dist 98/98 | Unowned reads in the dismissal effect: both fail 3. Raw boolean data attributes: both fail 3. Velocity dismissal ignoring the direction: both fail 1 | `test/basic.spec.ts` is upstream sonner's `test/tests/basic.spec.ts`, run against `test/app`, a port of its test page |
 
 ## Shared helpers
 
-| Source                             | e2e                                        | Used by               |
-| ---------------------------------- | ------------------------------------------ | --------------------- |
-| `afterEach` Solid diagnostics gate | `test.afterEach` in tests/basic.e2e.ts     | every test            |
-| `flick(page, dy)`                  | `flick(browser, dy)` in tests/basic.e2e.ts | both fast-flick tests |
+| Source                                                    | e2e                                                                      | Used by                     |
+| --------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------------- |
+| `afterEach` Solid diagnostics gate (`page.on('console')`) | `test.beforeEach` init script and `test.afterEach` in tests/basic.e2e.ts | every test                  |
+| `page.waitForTimeout(5000)` then a count                  | `toastStaysFor(browser, ms)`                                             | both "is not removed" tests |
+| `mouse.move(x, y, { steps })`                             | `moveInSteps(browser, from, to, steps)`                                  | the dismiss callback test   |
+| `mouse.move(x, y, { steps: 5 })` flick                    | `flick(browser, dx)`, pointer events dispatched in the page              | both fast-swipe tests       |
 
 ## Gaps
 
-- No element handles. The in-place update test tags the DOM node with `browser.evaluate` and reads the tag back.
-- No `waitForTimeout`. The hover test watches the toast in the page past its 4 s lifetime. The height test waits for the toast's transitions to finish. The two "stays on screen" checks use a negated matcher, which holds for 1 s. The reused-id test waits for the toast to be gone.
-- No `steps` on `mouse.move`. The swipe test sends 10 moves itself.
-- On native Windows, a run that starts `app.command` passes but does not exit, because the dev server it started keeps running. The docs ask for WSL on Windows. Locally, start `pnpm dev` first and `reuseExisting` uses it. CI runs on Linux.
+- No console listener. An init script keeps the page's Solid diagnostics in `window.__solidDiagnostics` for the `afterEach`. Only the test sets it; the app has no test hook.
+- No `waitForTimeout`. The hover and infinite-duration tests watch the document in the page past the toast's lifetime. The update test waits on the updated text with a timeout. The two "stays on screen" checks use a negated matcher, which holds for 1 s, then `toHaveCount(1)`.
+- No `steps` on `mouse.move`. The dismiss callback test sends the moves itself. A flick sent through the mouse is too slow to cross the velocity threshold, so the fast-swipe tests dispatch pointer events in the page.
+- No `toHaveCSS`. The two button style tests read `getComputedStyle` with `browser.evaluate`.
+- No `rejects` matcher. The promise rejection test catches the rejection and compares its message.
+- `getByLabel` is exact. The toaster's label is "Notices alt+T", so "aria labels are custom" passes `{ exact: false }` where Playwright matched the fragment.
+- On native Windows, a run that starts `app.command` passes but does not exit, because the dev server it started keeps running. The docs ask for WSL on Windows. Locally, start `pnpm dev:test` first and `reuseExisting` uses it. CI runs on Linux.
 
 ## Next
 
-Nothing left to port. Retiring `test/Basic.test.tsx`, `playwright.config.ts`, `@playwright/test`, and the Playwright CI job waits for the maintainer's confirmation.
+Nothing left to port. Retiring `test/basic.spec.ts`, `playwright.config.ts`, `@playwright/test`, and the Playwright CI job waits for the maintainer's confirmation. `test/app` and `test/vite.config.ts` stay, since the e2e suite drives them.
