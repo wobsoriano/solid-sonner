@@ -6,8 +6,10 @@ const app = {
   command: {
     executable: 'pnpm',
     args: ['dev:test'],
+    // On native Windows a run that starts this server passes but never exits,
+    // so start `pnpm dev:test` first and the run reuses it.
     reuseExisting: true,
-    // `TEST_DIST=1` runs the page against the published `solid` entry.
+    // `TEST_DIST` picks the entry the page loads, as test/vite.config.ts says.
     inheritEnv: ['TEST_DIST'],
     log: '.e2e/logs/app.log',
   },
