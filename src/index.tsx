@@ -704,11 +704,15 @@ function Toaster(props: ToasterProps) {
       }
 
       const nextToast = toastItem as ToastT;
-      setToastsStore((draft) => {
-        const existing = draft.oldestFirst.find((toast) => toast.id === nextToast.id);
-        if (existing) reconcile(nextToast)(existing);
-        else draft.oldestFirst.push(nextToast);
-      });
+      // `toast()` may run while a component renders, where Solid 2 rejects writes.
+      // Upstream defers the same write with setTimeout.
+      queueMicrotask(() =>
+        setToastsStore((draft) => {
+          const existing = draft.oldestFirst.find((toast) => toast.id === nextToast.id);
+          if (existing) reconcile(nextToast)(existing);
+          else draft.oldestFirst.push(nextToast);
+        }),
+      );
     }),
   );
 
