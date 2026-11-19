@@ -1,5 +1,15 @@
 # solid-sonner
 
+## 1.0.0
+
+### Major Changes
+
+- 64ed1f6: Support Solid 2. `solid-js@^2.0.0` and `@solidjs/web@^2.0.0` are now peer dependencies, and Solid 1 is no longer supported. The public API and rendered output are unchanged. A toast now reaches the DOM a microtask after `toast()` instead of synchronously, so a unit test that queries for it right away needs to wait a tick first.
+
+### Patch Changes
+
+- 0bfb1dc: Return focus to the previously focused element once the last toast closes, as sonner does. React's `onFocus` and `onBlur` bubble and Solid's do not, so the toaster never saw focus move into a toast.
+
 ## 0.3.3
 
 ### Patch Changes
