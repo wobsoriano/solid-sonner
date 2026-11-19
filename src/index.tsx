@@ -15,7 +15,6 @@ import {
   createMemo,
   createSignal,
   createStore,
-  onCleanup,
   onSettled,
   reconcile,
   untrack,
@@ -758,13 +757,21 @@ function Toaster(props: ToasterProps) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   });
 
-  onCleanup(() => {
-    if (lastFocusedElement) {
-      lastFocusedElement.focus({ preventScroll: true });
-      lastFocusedElement = null;
-      isFocusWithin = false;
-    }
-  });
+  // Firefox fires no focusout when the focused toast is removed, so focus also
+  // returns when the list unmounts with its last toast.
+  createEffect(
+    () => filteredToasts().length > 0,
+    (hasToasts) => {
+      if (!hasToasts) return;
+      return () => {
+        if (lastFocusedElement) {
+          lastFocusedElement.focus({ preventScroll: true });
+          lastFocusedElement = null;
+          isFocusWithin = false;
+        }
+      };
+    },
+  );
 
   return (
     <section
@@ -806,7 +813,7 @@ function Toaster(props: ToasterProps) {
                   ...props.style,
                   ...assignOffset(props.offset, props.mobileOffset),
                 }}
-                onBlur={(event) => {
+                onFocusOut={(event) => {
                   if (
                     isFocusWithin &&
                     !event.currentTarget.contains(event.relatedTarget as Node | null)
@@ -818,7 +825,7 @@ function Toaster(props: ToasterProps) {
                     }
                   }
                 }}
-                onFocus={(event) => {
+                onFocusIn={(event) => {
                   const isNotDismissible =
                     event.target instanceof HTMLElement &&
                     event.target.dataset.dismissible === 'false';
