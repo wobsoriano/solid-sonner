@@ -31,7 +31,7 @@ jobs:
 
       - run: vp run typecheck
 
-  e2e:
+  Playwright:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -46,25 +46,23 @@ jobs:
 
       - run: vp pack
 
-      - run: vp exec e2e-web install chromium webkit --with-deps
+      - run: vp exec playwright install --with-deps
 
-      - run: vp exec e2e run --reporter list,junit
+      # `vp test` is the built-in Vitest runner, so the Playwright suite has to
+      # go through the package.json script.
+      - run: vp run test
 
-      - run: vp exec e2e run --reporter list,junit
+      - run: vp run test
         env:
           TEST_DIST: '1'
 
-      - run: vp exec e2e run --reporter list,junit
+      - run: vp run test
         env:
           TEST_DIST: default
 
       - uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() }}
+        if: always()
         with:
-          name: e2e-report
-          path: |
-            .e2e/report.json
-            .e2e/junit.xml
-            .e2e/results
-          if-no-files-found: warn
+          name: playwright-report
+          path: playwright-report/
           retention-days: 30
