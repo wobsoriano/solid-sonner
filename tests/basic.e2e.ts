@@ -34,21 +34,6 @@ const toastStaysFor = (browser: Browser, ms: number) =>
     { selector: TOAST, ms },
   );
 
-// No `steps` on `mouse.move`: sends the intermediate moves itself.
-const moveInSteps = async (
-  browser: Browser,
-  from: { x: number; y: number },
-  to: { x: number; y: number },
-  steps: number,
-) => {
-  for (let step = 1; step <= steps; step++) {
-    await browser.mouse.move(
-      from.x + ((to.x - from.x) * step) / steps,
-      from.y + ((to.y - from.y) * step) / steps,
-    );
-  }
-};
-
 // A flick has to beat the swipe velocity threshold, and a mouse round trip per
 // move is far too slow for that, which would let the disallowed-direction test
 // pass with the bug present. So the pointer events are dispatched in the page.
@@ -239,20 +224,7 @@ test.describe('Basic functionality', () => {
 
     await expect(toast).toBeVisible();
 
-    const box = await toast.boundingBox();
-    if (!box) throw new Error('Toast not rendered');
-
-    const start = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-    const dragStart = { x: start.x, y: start.y + 20 };
-
-    await browser.mouse.move(start.x, start.y);
-    await browser.mouse.down();
-
-    // A small first movement starts the drag.
-    await moveInSteps(browser, start, dragStart, 5);
-
-    await moveInSteps(browser, dragStart, { x: start.x, y: start.y + 300 }, 10);
-    await browser.mouse.up();
+    await dragDown(browser);
 
     await expect(screen.getByTestId('dismiss-el')).toHaveCount(1);
   });
