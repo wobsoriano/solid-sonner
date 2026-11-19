@@ -31,42 +31,6 @@ jobs:
 
       - run: vp run typecheck
 
-  Playwright:
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: voidzero-dev/setup-vp@v1.21.2
-        with:
-          node-version: '24'
-          cache: true
-          run-install: |
-            - args: ['--frozen-lockfile', '--prefer-offline']
-
-      - run: vp pack
-
-      - run: vp exec playwright install --with-deps
-
-      # `vp test` is the built-in Vitest runner, so the Playwright suite has to
-      # go through the package.json script.
-      - run: vp run test
-
-      - run: vp run test
-        env:
-          TEST_DIST: '1'
-
-      - run: vp run test
-        env:
-          TEST_DIST: default
-
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
-
   e2e:
     timeout-minutes: 60
     runs-on: ubuntu-latest

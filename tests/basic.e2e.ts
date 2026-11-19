@@ -1,5 +1,5 @@
-// Ported from test/basic.spec.ts, itself a port of
-// https://github.com/emilkowalski/sonner/blob/main/test/tests/basic.spec.ts
+// Port of https://github.com/emilkowalski/sonner/blob/main/test/tests/basic.spec.ts
+// against the page in test/app.
 import { test } from '@e2e-dev/web';
 import type { Browser } from '@e2e-dev/web';
 import { expect } from 'e2e';

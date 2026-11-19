@@ -40,7 +40,7 @@
     "prepare": "vp config",
     "build": "vp pack",
     "dev:build": "vite build dev",
-    "test": "playwright test",
+    "test": "e2e run",
     "prepublishOnly": "pnpm build",
     "update-deps": "pnpm up -Li",
     "typecheck": "tsc --noEmit",
@@ -48,13 +48,11 @@
     "lint:fix": "vp lint --fix",
     "format": "vp fmt",
     "check": "vp check",
-    "release": "changeset publish",
-    "test:e2e": "e2e run"
+    "release": "changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
     "@e2e-dev/web": "^0.16.0",
-    "@playwright/test": "^1.62.1",
     "@solidjs/vite-plugin": "^3.0.1",
     "@solidjs/web": "^2.0.1",
     "@types/node": "^24.13.3",

@@ -1,4 +1,4 @@
-// Ported from test/solid.spec.ts
+// solid-sonner's own regressions, for what sonner's suite does not cover.
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { gateSolidDiagnostics } from './support/diagnostics';
