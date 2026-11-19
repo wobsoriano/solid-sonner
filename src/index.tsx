@@ -86,7 +86,10 @@ function getDefaultSwipeDirections(position: string): SwipeDirection[] {
 function measureUnstackedHeight(element: HTMLElement) {
   const originalHeight = element.style.height;
   element.style.height = 'auto';
-  const height = Number.parseFloat(window.getComputedStyle(element).height);
+  // The computed height is `auto` when nothing is laid out (jsdom, `display: none`).
+  const height =
+    Number.parseFloat(window.getComputedStyle(element).height) ||
+    element.getBoundingClientRect().height;
   element.style.height = originalHeight;
   return height;
 }
