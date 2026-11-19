@@ -1,4 +1,5 @@
-import type { JSX, Setter } from 'solid-js';
+import type { JSX } from '@solidjs/web';
+import type { Setter } from 'solid-js';
 
 export type ToastTypes =
   | 'normal'

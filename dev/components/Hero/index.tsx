@@ -17,7 +17,6 @@ export function Hero() {
       </p>
       <div class={styles.buttons}>
         <button
-          data-testid="hero-default-button"
           data-primary=""
           onClick={() => {
             toast('Sonner', {

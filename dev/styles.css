@@ -125,7 +125,7 @@ code {
   border-color: var(--gray4);
 }
 
-.button[data-active='true'] {
+.button[data-active] {
   background: var(--gray3);
   border-color: var(--gray7);
 }

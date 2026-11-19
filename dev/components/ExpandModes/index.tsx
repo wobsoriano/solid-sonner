@@ -11,7 +11,6 @@ export function ExpandModes(props: { expand: boolean; setExpand: Setter<boolean>
       </p>
       <div class="buttons">
         <button
-          data-testid="expand-expand"
           data-active={props.expand}
           class="button"
           onClick={() => {
@@ -24,7 +23,6 @@ export function ExpandModes(props: { expand: boolean; setExpand: Setter<boolean>
           Expand
         </button>
         <button
-          data-testid="expand-default"
           data-active={!props.expand}
           class="button"
           onClick={() => {

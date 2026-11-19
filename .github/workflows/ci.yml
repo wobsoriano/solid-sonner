@@ -56,6 +56,10 @@ jobs:
         env:
           TEST_DIST: '1'
 
+      - run: vp run test
+        env:
+          TEST_DIST: default
+
       - uses: actions/upload-artifact@v7
         if: always()
         with:

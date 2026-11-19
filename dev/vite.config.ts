@@ -1,6 +1,6 @@
 import { URL, fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
-import solidPlugin from 'vite-plugin-solid';
+import solidPlugin from '@solidjs/vite-plugin';
 
 export default defineConfig({
   plugins: [

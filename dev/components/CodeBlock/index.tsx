@@ -3,7 +3,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import xml from 'highlight.js/lib/languages/xml';
 import 'highlight.js/styles/github.css';
 import type { Component } from 'solid-js';
-import { Show, createComputed, createMemo, createSignal, mergeProps, untrack } from 'solid-js';
+import { Show, createMemo, createSignal } from 'solid-js';
 import copy from 'copy-to-clipboard';
 import styles from './code-block.module.css';
 
@@ -28,48 +28,25 @@ interface Props {
 }
 
 export const CodeBlock: Component<Props> = (props) => {
-  /* eslint-disable solid/reactivity */
-  const propsWithDefaults = mergeProps(
-    {
-      language: '',
-      autodetect: true,
-      ignoreIllegals: true,
-    },
-    props,
-  );
-
-  const [language, setLanguage] = createSignal(propsWithDefaults.language || '');
   const [copying, setCopying] = createSignal(0);
 
-  createComputed(() => {
-    setLanguage(propsWithDefaults.language);
-  });
+  let lastDetectedLanguage = '';
+  const highlighted = createMemo(() => {
+    const language = props.language || lastDetectedLanguage;
 
-  const autodetect = createMemo(() => props.autodetect || !language());
-  const cannotDetectLanguage = createMemo(() => !autodetect() && !hljs.getLanguage(language()));
-
-  const className = createMemo(() => {
-    if (cannotDetectLanguage()) return '';
-
-    return `hljs ${language()} ${props.class}`;
-  });
-
-  const highlightedCode = createMemo(() => {
-    if (cannotDetectLanguage()) return escapeHtml(props.children);
-
-    if (autodetect()) {
+    if (props.autodetect || !language) {
       const result = hljs.highlightAuto(props.children);
-      untrack(() => {
-        setLanguage(result.language ?? '');
-      });
-      return result.value;
+      lastDetectedLanguage = result.language ?? '';
+      return { className: `hljs ${lastDetectedLanguage} ${props.class}`, html: result.value };
     }
 
+    if (!hljs.getLanguage(language)) return { className: '', html: escapeHtml(props.children) };
+
     const result = hljs.highlight(props.children, {
-      language: language(),
+      language,
       ignoreIllegals: props.ignoreIllegals,
     });
-    return result.value;
+    return { className: `hljs ${language} ${props.class}`, html: result.value };
   });
 
   const onCopy = () => {
@@ -130,10 +107,9 @@ export const CodeBlock: Component<Props> = (props) => {
       </button>
 
       <pre class={styles.wrapper}>
-        <div class={`${className()} ${styles.root}`}>
+        <div class={`${highlighted().className} ${styles.root}`}>
           <div />
-          {/* eslint-disable-next-line solid/no-innerhtml */}
-          <code innerHTML={highlightedCode()} />
+          <code innerHTML={highlighted().html} />
         </div>
       </pre>
     </div>

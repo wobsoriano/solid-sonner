@@ -1,17 +1,15 @@
-import { For } from 'solid-js';
-import type { JSX } from 'solid-js';
+import { Repeat } from 'solid-js';
+import type { JSX } from '@solidjs/web';
 import type { ToastTypes } from './types';
-
-const bars = Array(12).fill(0);
 
 export function Loader(props: { visible: boolean; class?: string; className?: string }) {
   return (
     <div
       class={['sonner-loading-wrapper', props.class ?? props.className].filter(Boolean).join(' ')}
-      data-visible={props.visible}
+      data-visible={String(props.visible)}
     >
       <div class="sonner-spinner">
-        <For each={bars}>{(_, i) => <div class="sonner-loading-bar" data-index={i()} />}</For>
+        <Repeat count={12}>{(i) => <div class="sonner-loading-bar" data-index={i} />}</Repeat>
       </div>
     </div>
   );
