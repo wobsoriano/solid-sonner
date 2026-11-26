@@ -29,4 +29,16 @@ test.describe('Solid regressions', () => {
     await page.getByTestId('toast-during-render').click();
     await expect(page.getByText('Toast created during render')).toHaveCount(1);
   });
+
+  test('a run of toasts does not republish the lists that did not change', async ({ page }) => {
+    // Every publish rebuilds the toaster's derived lists from scratch. Five
+    // toasts in a row leave the set of positions in use exactly as it was, and
+    // leave the secondary toaster's own list empty throughout, so a memo with
+    // no equality gate commits a new-but-equivalent array run after run and
+    // wakes everything below it for nothing. Solid reports that as
+    // UNSTABLE_MEMO_OUTPUT, which the fixture fails the test on.
+    for (let index = 0; index < 5; index++) await page.getByTestId('default-button').click();
+
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(5);
+  });
 });
