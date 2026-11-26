@@ -150,6 +150,19 @@ function mergeClassName(className?: string, legacy?: string) {
   return className ?? legacy ?? '';
 }
 
+/**
+ * Equality for the memos that derive a list of already-stable parts. Each of
+ * them rebuilds its array on every toast-store publish, so without a gate the
+ * memo commits a referentially new but identical list and every subscriber —
+ * the position fan-out, the `<For>`, the offset arithmetic — re-runs for
+ * nothing. The members are store proxies, height records and position strings,
+ * all of which keep their identity while they are unchanged, so comparing
+ * element by element is exact rather than a heuristic.
+ */
+function sameItems<T>(a: readonly T[], b: readonly T[]) {
+  return a.length === b.length && a.every((item, index) => item === b[index]);
+}
+
 function useSonner(): { toasts: Accessor<ToastT[]> } {
   // Starts empty: subscribing replays whatever is already active.
   const [activeToasts, setActiveToasts] = createSignal<ToastT[]>([]);
@@ -647,24 +660,30 @@ function Toaster(props: ToasterProps) {
   const containerAriaLabel = () => props.containerAriaLabel ?? 'Notifications';
 
   const [toastsStore, setToastsStore] = createStore<{ oldestFirst: ToastT[] }>({ oldestFirst: [] });
-  const filteredToasts = createMemo(() => {
-    const toasts = toastsStore.oldestFirst;
-    const visible = props.id
-      ? toasts.filter((toast) => toast.toasterId === props.id)
-      : toasts.filter((toast) => !toast.toasterId);
+  const filteredToasts = createMemo(
+    () => {
+      const toasts = toastsStore.oldestFirst;
+      const visible = props.id
+        ? toasts.filter((toast) => toast.toasterId === props.id)
+        : toasts.filter((toast) => !toast.toasterId);
 
-    return visible.reverse();
-  });
-  const possiblePositions = createMemo(() => {
-    return Array.from(
-      new Set([
-        position(),
-        ...filteredToasts()
-          .filter((toast) => toast.position)
-          .map((toast) => toast.position as Position),
-      ]),
-    );
-  });
+      return visible.reverse();
+    },
+    { equals: sameItems },
+  );
+  const possiblePositions = createMemo(
+    () => {
+      return Array.from(
+        new Set([
+          position(),
+          ...filteredToasts()
+            .filter((toast) => toast.position)
+            .map((toast) => toast.position as Position),
+        ]),
+      );
+    },
+    { equals: sameItems },
+  );
   const [heights, setHeights] = createSignal<HeightT[]>([]);
   const [expanded, setExpanded] = createSignal(false);
   const [interacting, setInteracting] = createSignal(false);
@@ -792,15 +811,20 @@ function Toaster(props: ToasterProps) {
       <For each={possiblePositions()}>
         {(position, index) => {
           const [y, x] = position.split('-');
-          const toastsByPosition = createMemo(() =>
-            filteredToasts().filter(
-              (toast) => (!toast.position && index() === 0) || toast.position === position,
-            ),
+          const toastsByPosition = createMemo(
+            () =>
+              filteredToasts().filter(
+                (toast) => (!toast.position && index() === 0) || toast.position === position,
+              ),
+            { equals: sameItems },
           );
-          const heightsByPosition = createMemo(() => {
-            const byToastId = new Map(heights().map((height) => [height.toastId, height]));
-            return toastsByPosition().flatMap((toast) => byToastId.get(toast.id) ?? []);
-          });
+          const heightsByPosition = createMemo(
+            () => {
+              const byToastId = new Map(heights().map((height) => [height.toastId, height]));
+              return toastsByPosition().flatMap((toast) => byToastId.get(toast.id) ?? []);
+            },
+            { equals: sameItems },
+          );
 
           return (
             <Show when={filteredToasts().length > 0}>
